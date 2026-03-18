@@ -2,85 +2,127 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro UCI Omnium Calculator v5</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Pro UCI Omnium Calculator v6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        .input-sm { width: 55px; text-align: center; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .tab-btn.active { border-bottom: 2px solid #2563eb; color: #1e40af; background-color: #eff6ff; font-weight: bold; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        .matrix-container { overflow-x: auto; max-width: 100%; padding-bottom: 10px; }
-        .matrix-table th, .matrix-table td { min-width: 35px; text-align: center; padding: 4px; border: 1px solid #e5e7eb; }
-        .lap-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: #2563eb; }
-        .sticky-col { position: sticky; left: 0; background-color: white; z-index: 10; font-weight: bold; border-right: 2px solid #cbd5e1 !important; }
-        .sticky-header { position: sticky; left: 0; z-index: 11; background-color: #e5e7eb; border-right: 2px solid #cbd5e1 !important; }
+        /* Anti-Zoom on iOS: Inputs must be at least 16px */
+        input[type="number"], input[type="text"], textarea { font-size: 16px !important; }
+        
+        .input-sm { width: 60px; text-align: center; padding: 8px 4px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Sleek scrollable tabs for mobile */
+        .tabs-container {
+            display: flex; overflow-x: auto; white-space: nowrap; 
+            -ms-overflow-style: none; scrollbar-width: none; /* Hide scrollbar */
+            -webkit-overflow-scrolling: touch;
+        }
+        .tabs-container::-webkit-scrollbar { display: none; }
+        .tab-btn { flex: 0 0 auto; transition: all 0.2s ease; border-bottom: 3px solid transparent; }
+        .tab-btn.active { border-bottom: 3px solid #2563eb; color: #1e40af; background-color: #eff6ff; font-weight: bold; }
+        
+        /* Matrix Tables - Mobile Optimized */
+        .matrix-container { 
+            overflow-x: auto; max-width: 100%; padding-bottom: 15px; 
+            -webkit-overflow-scrolling: touch; 
+            box-shadow: inset -10px 0 10px -10px rgba(0,0,0,0.1); /* visual cue for scrolling */
+        }
+        .matrix-table { border-collapse: separate; border-spacing: 0; w-full; }
+        .matrix-table th, .matrix-table td { 
+            min-width: 45px; text-align: center; padding: 8px 4px; 
+            border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;
+        }
+        .matrix-table th { border-top: 1px solid #e5e7eb; }
+        
+        /* Mobile friendly large checkboxes */
+        .lap-checkbox { 
+            width: 24px; height: 24px; cursor: pointer; accent-color: #2563eb; 
+            display: block; margin: 0 auto;
+        }
+        
+        /* Advanced Sticky Columns for smooth horizontal scrolling */
+        .sticky-col { 
+            position: sticky; left: 0; background-color: #ffffff; z-index: 10; 
+            font-weight: bold; text-align: left !important; padding-left: 12px !important;
+            border-right: 2px solid #cbd5e1 !important;
+            box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); /* Depth on scroll */
+        }
+        .sticky-header { 
+            position: sticky; top: 0; z-index: 11; background-color: #e5e7eb; 
+            border-bottom: 2px solid #cbd5e1 !important;
+        }
+        .sticky-corner {
+            position: sticky; top: 0; left: 0; z-index: 20; background-color: #e5e7eb;
+            border-right: 2px solid #cbd5e1 !important; border-bottom: 2px solid #cbd5e1 !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen">
 
-    <div class="max-w-screen-2xl mx-auto p-4">
-        <header class="mb-4 bg-white p-4 rounded-lg shadow-sm border-t-4 border-blue-600 flex justify-between items-center">
+    <div class="max-w-screen-2xl mx-auto p-2 sm:p-4 md:p-6">
+        <header class="mb-4 bg-white p-4 sm:p-6 rounded-lg shadow-sm border-t-4 border-blue-600 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-blue-900 flex items-center gap-2">🚴 Pro UCI Omnium Calculator</h1>
-                <p class="text-gray-500 text-sm mt-1">Bulk Entry • Automated Laps • Official UCI PDF Export</p>
+                <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900 flex items-center gap-2">🚴 Pro UCI Omnium</h1>
+                <p class="text-gray-500 text-xs sm:text-sm mt-1">Cross-Device Optimized • Automated Laps</p>
             </div>
-            <div class="flex gap-2">
-                <button onclick="exportUCIPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded shadow transition flex items-center gap-2">
-                    📄 Export UCI PDF
-                </button>
-            </div>
+            <button onclick="exportUCIPDF()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-3 rounded-lg shadow-md transition flex justify-center items-center gap-2 text-base">
+                📄 Export UCI PDF
+            </button>
         </header>
 
-        <div class="flex flex-wrap border-b border-gray-300 mb-4 bg-white rounded-t-lg shadow-sm text-sm sm:text-base">
-            <button class="tab-btn active px-4 py-3 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-reg', this)">0. Setup</button>
-            <button class="tab-btn px-4 py-3 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-scr', this); renderEventView(1)">1. Scratch</button>
-            <button class="tab-btn px-4 py-3 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-tmp', this); renderTempoRace()">2. Tempo Race</button>
-            <button class="tab-btn px-4 py-3 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-eli', this); renderEventView(3)">3. Elimination</button>
-            <button class="tab-btn px-4 py-3 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-pts', this); renderPointsRace()">4. Points Race</button>
-            <button class="tab-btn px-4 py-3 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-final', this); renderFinalStandings()">🏆 Final Standings</button>
+        <div class="tabs-container border-b border-gray-300 mb-4 bg-white rounded-t-lg shadow-sm text-sm sm:text-base">
+            <button class="tab-btn active px-5 py-4 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-reg', this)">0. Setup</button>
+            <button class="tab-btn px-5 py-4 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-scr', this); renderEventView(1)">1. Scratch</button>
+            <button class="tab-btn px-5 py-4 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-tmp', this); renderTempoRace()">2. Tempo Race</button>
+            <button class="tab-btn px-5 py-4 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-eli', this); renderEventView(3)">3. Elimination</button>
+            <button class="tab-btn px-5 py-4 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-pts', this); renderPointsRace()">4. Points Race</button>
+            <button class="tab-btn px-5 py-4 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-final', this); renderFinalStandings()">🏆 Final Standings</button>
         </div>
 
-        <div id="tab-reg" class="tab-content active bg-white p-6 rounded-b-lg shadow-sm">
-            <h2 class="text-xl font-bold mb-4">Register Riders (Bulk Entry)</h2>
+        <div id="tab-reg" class="tab-content active bg-white p-4 sm:p-6 rounded-b-lg shadow-sm">
+            <h2 class="text-lg sm:text-xl font-bold mb-4">Register Riders (Bulk Entry)</h2>
             <form id="addRiderForm" class="flex flex-col gap-4 max-w-2xl mb-6">
-                <p class="text-sm text-gray-600">Enter multiple riders separated by commas (e.g., <strong>John Doe, Jane Smith, Rider 3</strong>) or paste a column directly from Excel.</p>
-                <textarea id="riderName" rows="3" placeholder="Paste names from Excel or type comma-separated names here..." class="border border-gray-300 rounded px-4 py-2 focus:ring-2 focus:ring-blue-500 w-full resize-y" required></textarea>
-                <div class="flex gap-2">
-                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 transition shadow">Add All Riders</button>
-                    <button type="button" onclick="clearAllRiders()" class="bg-gray-200 text-gray-700 px-6 py-2 rounded hover:bg-red-100 hover:text-red-700 transition">Clear List</button>
+                <p class="text-xs sm:text-sm text-gray-600">Enter multiple riders separated by commas or paste a column directly from Excel.</p>
+                <textarea id="riderName" rows="3" placeholder="Paste names from Excel or type comma-separated names here..." class="border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 w-full resize-y" required></textarea>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow w-full sm:w-auto">Add All Riders</button>
+                    <button type="button" onclick="clearAllRiders()" class="bg-gray-100 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-red-50 hover:text-red-700 transition w-full sm:w-auto font-medium">Clear List</button>
                 </div>
             </form>
             <div id="riderList" class="flex flex-wrap gap-2 mb-8 border-b pb-6"></div>
 
-            <div class="bg-blue-50 p-5 rounded border border-blue-200 inline-block w-full max-w-4xl">
-                <h3 class="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">⚙️ Race Distance Parameters</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-3 rounded shadow-sm border border-blue-100">
+            <div class="bg-blue-50 p-4 sm:p-6 rounded-lg border border-blue-200 w-full max-w-4xl">
+                <h3 class="text-base sm:text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">⚙️ Race Distance Parameters</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
                         <label class="block text-sm font-bold text-gray-700 mb-2 border-b pb-1">Tempo Race</label>
                         <span class="text-xs text-gray-500 block mb-1">Total Laps (Sprints):</span>
-                        <input type="number" id="settingTempoLaps" value="40" min="1" max="100" class="border rounded px-3 py-1 w-full focus:ring-2 focus:ring-blue-500" onchange="updateSettings()">
+                        <input type="number" id="settingTempoLaps" value="40" min="1" max="100" class="border rounded px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 text-lg" onchange="updateSettings()">
                     </div>
                     
-                    <div class="bg-white p-3 rounded shadow-sm border border-blue-100 md:col-span-2">
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-blue-100 lg:col-span-2">
                         <label class="block text-sm font-bold text-gray-700 mb-2 border-b pb-1">Points Race Auto-Calculator</label>
-                        <div class="flex gap-4 items-center">
-                            <div>
+                        <div class="flex flex-wrap sm:flex-nowrap gap-4 items-end">
+                            <div class="w-1/2 sm:w-auto">
                                 <span class="text-xs text-gray-500 block mb-1">Total Laps:</span>
-                                <input type="number" id="prTotalLaps" value="80" min="1" max="200" class="border rounded px-3 py-1 w-24 focus:ring-2 focus:ring-blue-500" onchange="updateSettings()">
+                                <input type="number" id="prTotalLaps" value="80" min="1" max="200" class="border rounded px-3 py-2 w-full sm:w-24 focus:ring-2 focus:ring-blue-500 text-lg" onchange="updateSettings()">
                             </div>
-                            <div>
-                                <span class="text-xs text-gray-500 block mb-1">Sprint Every (Laps):</span>
-                                <input type="number" id="prLapsPerSprint" value="10" min="1" max="50" class="border rounded px-3 py-1 w-24 focus:ring-2 focus:ring-blue-500" onchange="updateSettings()">
+                            <div class="w-1/2 sm:w-auto">
+                                <span class="text-xs text-gray-500 block mb-1">Sprint Every:</span>
+                                <input type="number" id="prLapsPerSprint" value="10" min="1" max="50" class="border rounded px-3 py-2 w-full sm:w-24 focus:ring-2 focus:ring-blue-500 text-lg" onchange="updateSettings()">
                             </div>
-                            <div class="ml-auto text-right bg-blue-100 p-2 rounded">
-                                <span class="block text-xs font-bold text-blue-800">Calculated Sprints</span>
-                                <span id="calculatedSprintsDisplay" class="text-xl font-black text-blue-900">8</span>
+                            <div class="w-full sm:w-auto sm:ml-auto text-center sm:text-right bg-blue-100 p-3 rounded-lg border border-blue-200">
+                                <span class="block text-xs font-bold text-blue-800 uppercase tracking-wide">Total Sprints</span>
+                                <span id="calculatedSprintsDisplay" class="text-2xl font-black text-blue-900 leading-none">8</span>
                             </div>
                         </div>
                     </div>
@@ -88,68 +130,72 @@
             </div>
         </div>
 
-        <div id="tab-scr" class="tab-content bg-white p-6 rounded-b-lg shadow-sm">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="view-1"></div>
+        <div id="tab-scr" class="tab-content bg-white p-4 sm:p-6 rounded-b-lg shadow-sm">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8" id="view-1"></div>
         </div>
-        <div id="tab-eli" class="tab-content bg-white p-6 rounded-b-lg shadow-sm">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="view-3"></div>
+        <div id="tab-eli" class="tab-content bg-white p-4 sm:p-6 rounded-b-lg shadow-sm">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8" id="view-3"></div>
         </div>
 
-        <div id="tab-tmp" class="tab-content bg-white p-6 rounded-b-lg shadow-sm">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-xl font-bold text-blue-900">Tempo Race Matrix</h2>
-                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded" id="tempoStatusBadge">40 Laps</span>
+        <div id="tab-tmp" class="tab-content bg-white p-4 sm:p-6 rounded-b-lg shadow-sm">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                <h2 class="text-lg sm:text-xl font-bold text-blue-900">Tempo Race Matrix</h2>
+                <span class="bg-blue-100 text-blue-800 text-xs sm:text-sm font-bold px-3 py-1 rounded-full" id="tempoStatusBadge">40 Laps</span>
             </div>
             
-            <div class="matrix-container border rounded mb-8">
+            <div class="matrix-container border border-gray-200 rounded-lg mb-8 bg-white">
                 <table class="matrix-table w-full text-sm">
-                    <thead class="bg-gray-200 text-gray-700" id="tempoThead"></thead>
+                    <thead class="bg-gray-100 text-gray-700" id="tempoThead"></thead>
                     <tbody id="tempoTbody"></tbody>
                 </table>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <h3 class="text-lg font-bold mb-3 text-purple-700">Tempo Race Placements</h3>
-                    <div id="tempoResultsDiv" class="border rounded"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                <div class="overflow-x-auto">
+                    <h3 class="text-base sm:text-lg font-bold mb-3 text-purple-700">Tempo Race Placements</h3>
+                    <div id="tempoResultsDiv" class="border border-gray-200 rounded-lg"></div>
                 </div>
-                <div>
-                    <h3 class="text-lg font-bold mb-3 text-green-700">Omnium Standings After Tempo Race</h3>
-                    <div id="tempoStandingsDiv" class="border rounded"></div>
+                <div class="overflow-x-auto">
+                    <h3 class="text-base sm:text-lg font-bold mb-3 text-green-700">Omnium Standings (After Tempo)</h3>
+                    <div id="tempoStandingsDiv" class="border border-gray-200 rounded-lg"></div>
                 </div>
             </div>
         </div>
 
-        <div id="tab-pts" class="tab-content bg-white p-6 rounded-b-lg shadow-sm overflow-x-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-blue-900">Points Race Matrix</h2>
-                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded" id="pointsStatusBadge">80 Laps (8 Sprints)</span>
+        <div id="tab-pts" class="tab-content bg-white p-4 sm:p-6 rounded-b-lg shadow-sm">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                <h2 class="text-lg sm:text-xl font-bold text-blue-900">Points Race Matrix</h2>
+                <span class="bg-blue-100 text-blue-800 text-xs sm:text-sm font-bold px-3 py-1 rounded-full" id="pointsStatusBadge">80 Laps (8 Sprints)</span>
             </div>
-            <table class="matrix-table w-full text-sm text-left border">
-                <thead class="bg-gray-200 text-gray-700" id="pointsThead"></thead>
-                <tbody id="prTableBody"></tbody>
-            </table>
+            <div class="matrix-container border border-gray-200 rounded-lg bg-white">
+                <table class="matrix-table w-full text-sm text-left">
+                    <thead class="bg-gray-100 text-gray-700" id="pointsThead"></thead>
+                    <tbody id="prTableBody"></tbody>
+                </table>
+            </div>
         </div>
 
-        <div id="tab-final" class="tab-content bg-white p-6 rounded-b-lg shadow-sm overflow-x-auto">
-            <h2 class="text-2xl font-bold mb-4 text-blue-900 text-center">🏆 Final Omnium Classification</h2>
-            <table class="matrix-table w-full text-sm text-left border">
-                <thead class="bg-gray-800 text-white">
-                    <tr>
-                        <th>Rank</th>
-                        <th>Rider</th>
-                        <th>Scratch</th>
-                        <th>Tempo</th>
-                        <th>Elim</th>
-                        <th class="text-yellow-300">Subtotal</th>
-                        <th>PR Sprints</th>
-                        <th>PR Laps</th>
-                        <th class="text-red-300">Final Sp. Rank</th>
-                        <th class="font-bold text-yellow-300 text-lg">Total Points</th>
-                    </tr>
-                </thead>
-                <tbody id="finalTableBody"></tbody>
-            </table>
+        <div id="tab-final" class="tab-content bg-white p-4 sm:p-6 rounded-b-lg shadow-sm">
+            <h2 class="text-xl sm:text-2xl font-bold mb-6 text-blue-900 text-center uppercase tracking-wide">🏆 Final Classification</h2>
+            <div class="matrix-container border border-gray-200 rounded-lg bg-white">
+                <table class="matrix-table w-full text-sm text-left">
+                    <thead class="bg-gray-800 text-white">
+                        <tr>
+                            <th class="py-3 px-2 text-center sticky left-0 bg-gray-900 z-20">Rank</th>
+                            <th class="py-3 px-4 sticky left-[45px] bg-gray-900 z-20">Rider</th>
+                            <th class="py-3 px-2 text-center">Scr</th>
+                            <th class="py-3 px-2 text-center">Tmp</th>
+                            <th class="py-3 px-2 text-center">Eli</th>
+                            <th class="py-3 px-2 text-center text-yellow-300 bg-gray-700">Sub-T</th>
+                            <th class="py-3 px-2 text-center">PR Spr</th>
+                            <th class="py-3 px-2 text-center">PR Lap</th>
+                            <th class="py-3 px-2 text-center text-red-300">Sp. Rnk</th>
+                            <th class="py-3 px-4 text-center font-bold text-yellow-300 text-lg bg-gray-900">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="finalTableBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -159,7 +205,6 @@
         let configTotalLaps = 80;
         let configLapsPerSprint = 10;
         let totalPointsSprints = 8; 
-        
         const ABSOLUTE_MAX_LAPS = 150; 
 
         let riders = [];
@@ -185,6 +230,9 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             if(btnElement) btnElement.classList.add('active');
+            
+            // Auto scroll active tab into view on mobile
+            btnElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
 
         function updateSettings() {
@@ -209,14 +257,13 @@
             const nameInput = document.getElementById('riderName');
             const rawText = nameInput.value;
             
-            // Split by comma or new line
             const newNames = rawText.split(/[,\n]+/).map(n => n.trim()).filter(n => n !== '');
-            
             let addedCount = 0;
+            
             newNames.forEach(name => {
                 if (!riders.some(r => r.name === name)) {
                     let newRider = {
-                        id: 'rider_' + Date.now().toString() + Math.random().toString(36).substr(2, 5), // Ensure unique IDs
+                        id: 'rider_' + Date.now().toString() + Math.random().toString(36).substr(2, 5), 
                         name: name,
                         scr: '', tmp: '', eli: '', 
                         tmpLaps: Array(ABSOLUTE_MAX_LAPS).fill(false),
@@ -231,13 +278,7 @@
 
             if (addedCount > 0) {
                 nameInput.value = '';
-                renderRiderList();
-                // Refresh views in case tabs are already generated
-                renderEventView(1);
-                renderEventView(3);
-                renderTempoRace();
-                renderPointsRace();
-                renderFinalStandings();
+                renderAll();
             } else {
                 alert("No new riders were added. Make sure they aren't duplicates.");
             }
@@ -246,30 +287,34 @@
         function clearAllRiders() {
             if(confirm("Are you sure you want to clear all riders and reset all results?")) {
                 riders = [];
-                renderRiderList();
-                renderEventView(1);
-                renderEventView(3);
-                renderTempoRace();
-                renderPointsRace();
-                renderFinalStandings();
+                renderAll();
             }
         }
 
         function renderRiderList() {
             const container = document.getElementById('riderList');
             if(riders.length === 0) {
-                container.innerHTML = `<span class="text-gray-400 italic">No riders added yet.</span>`;
+                container.innerHTML = `<span class="text-gray-400 italic text-sm">No riders added yet.</span>`;
             } else {
                 container.innerHTML = riders.map(r => `
-                    <span class="bg-blue-100 text-blue-900 border border-blue-200 px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                    <span class="bg-blue-50 text-blue-900 border border-blue-200 px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm">
                         ${r.name}
-                        <button onclick="removeRider('${r.id}')" class="text-red-500 hover:text-red-700 ml-1 font-bold" title="Remove Rider">×</button>
+                        <button type="button" onclick="removeRider('${r.id}')" class="text-red-400 hover:text-red-600 bg-white rounded-full w-5 h-5 flex items-center justify-center font-bold" title="Remove Rider">×</button>
                     </span>`).join('');
             }
         }
 
         function removeRider(id) {
             riders = riders.filter(r => r.id !== id);
+            renderAll();
+        }
+
+        function updateData(id, field, value) {
+            const rider = riders.find(r => r.id === id);
+            if (rider) { rider[field] = value === '' ? '' : Number(value); }
+        }
+
+        function renderAll() {
             renderRiderList();
             renderEventView(1);
             renderEventView(3);
@@ -278,21 +323,16 @@
             renderFinalStandings();
         }
 
-        function updateData(id, field, value) {
-            const rider = riders.find(r => r.id === id);
-            if (rider) { rider[field] = value === '' ? '' : Number(value); }
-        }
-
-        // --- SCRATCH & ELIMINATION ---
+        // --- SCRATCH & ELIMINATION (Responsive View) ---
         function renderEventView(eventId) {
             const container = document.getElementById(`view-${eventId}`);
             const key = eventKeys[eventId];
             
-            let inputHTML = `<div><h3 class="text-lg font-bold mb-3 text-blue-800">1. Enter ${eventNames[eventId]} Ranks</h3>
-                <table class="w-full border"><thead class="bg-gray-100"><tr><th class="p-2 border">Rider</th><th class="p-2 border">Rank Input</th></tr></thead><tbody>`;
+            let inputHTML = `<div class="overflow-x-auto border border-gray-200 rounded-lg bg-white"><div class="p-3 bg-blue-50 border-b border-gray-200"><h3 class="text-base font-bold text-blue-800">1. Enter ${eventNames[eventId]} Ranks</h3></div>
+                <table class="w-full text-sm text-left"><thead class="bg-gray-100"><tr><th class="p-3 border-b border-r">Rider</th><th class="p-3 border-b text-center">Rank Input</th></tr></thead><tbody>`;
             riders.forEach(r => {
-                inputHTML += `<tr><td class="p-2 border font-medium">${r.name}</td>
-                    <td class="p-2 border text-center"><input type="number" min="1" class="border rounded p-1 input-sm" value="${r[key]}" onchange="updateData('${r.id}', '${key}', this.value); renderEventView(${eventId})"></td></tr>`;
+                inputHTML += `<tr><td class="p-3 border-b border-r font-medium">${r.name}</td>
+                    <td class="p-2 border-b text-center"><input type="number" min="1" class="border border-gray-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-blue-500" value="${r[key]}" onchange="updateData('${r.id}', '${key}', this.value); renderEventView(${eventId})"></td></tr>`;
             });
             inputHTML += `</tbody></table></div>`;
 
@@ -303,10 +343,10 @@
                 return a.tieBreakerRank - b.tieBreakerRank; 
             });
 
-            let standingHTML = `<div><h3 class="text-lg font-bold mb-3 text-green-700">2. Standings After ${eventNames[eventId]}</h3>
-                <table class="w-full border"><thead class="bg-gray-100"><tr><th class="p-2 border">Rank</th><th class="p-2 border">Rider</th><th class="p-2 border text-blue-700">Total Pts</th></tr></thead><tbody>`;
+            let standingHTML = `<div class="overflow-x-auto border border-gray-200 rounded-lg bg-white"><div class="p-3 bg-green-50 border-b border-gray-200"><h3 class="text-base font-bold text-green-800">2. Standings After Event</h3></div>
+                <table class="w-full text-sm text-left"><thead class="bg-gray-100"><tr><th class="p-3 border-b border-r text-center w-16">Rank</th><th class="p-3 border-b border-r">Rider</th><th class="p-3 border-b text-center text-blue-700">Total Pts</th></tr></thead><tbody>`;
             standings.forEach((r, idx) => {
-                standingHTML += `<tr class="${idx === 0 ? 'bg-yellow-50' : ''}"><td class="p-2 border text-center font-bold">${idx + 1}</td><td class="p-2 border">${r.name}</td><td class="p-2 border text-center font-bold text-blue-600">${r.pts}</td></tr>`;
+                standingHTML += `<tr class="${idx === 0 ? 'bg-yellow-50/50' : ''}"><td class="p-3 border-b border-r text-center font-bold">${idx + 1}</td><td class="p-3 border-b border-r font-medium">${r.name}</td><td class="p-3 border-b text-center font-bold text-blue-700 text-lg">${r.pts}</td></tr>`;
             });
             standingHTML += `</tbody></table></div>`;
 
@@ -315,9 +355,9 @@
 
         // --- TEMPO RACE LOGIC ---
         function renderTempoRace() {
-            let theadHTML = `<tr><th class="sticky-header">Rider</th>`;
-            for(let i = 1; i <= configTempoLaps; i++) { theadHTML += `<th title="Lap ${i}">L${i}</th>`; }
-            theadHTML += `<th class="bg-green-100">+/- Laps</th><th class="bg-red-100">Final Rank</th><th class="bg-purple-100">Tempo Pts</th></tr>`;
+            let theadHTML = `<tr><th class="sticky-corner">Rider</th>`;
+            for(let i = 1; i <= configTempoLaps; i++) { theadHTML += `<th class="text-xs sm:text-sm text-gray-500 font-normal py-2" title="Lap ${i}">L${i}</th>`; }
+            theadHTML += `<th class="bg-green-100 px-2 py-2 whitespace-nowrap">+/- Laps</th><th class="bg-red-100 px-2 py-2 whitespace-nowrap">Final Rnk</th><th class="bg-purple-100 px-2 py-2 whitespace-nowrap">Event Pts</th></tr>`;
             document.getElementById('tempoThead').innerHTML = theadHTML;
 
             let tbodyHTML = "";
@@ -326,13 +366,13 @@
                 for(let i = 0; i < configTempoLaps; i++) { if(r.tmpLaps[i]) lapPts++; }
                 r.tmpRawPts = lapPts + ((r.tmpGainLoss || 0) * 20);
 
-                tbodyHTML += `<tr class="hover:bg-gray-50"><td class="sticky-col font-medium p-1">${r.name}</td>`;
+                tbodyHTML += `<tr class="hover:bg-blue-50/30 transition-colors"><td class="sticky-col py-3 pr-4">${r.name}</td>`;
                 for(let i = 0; i < configTempoLaps; i++) {
-                    tbodyHTML += `<td><input type="checkbox" class="lap-checkbox" ${r.tmpLaps[i] ? 'checked' : ''} onchange="toggleTempoLap('${r.id}', ${i}, this.checked)"></td>`;
+                    tbodyHTML += `<td><div class="flex justify-center items-center h-full w-full"><input type="checkbox" class="lap-checkbox" ${r.tmpLaps[i] ? 'checked' : ''} onchange="toggleTempoLap('${r.id}', ${i}, this.checked)"></div></td>`;
                 }
-                tbodyHTML += `<td class="bg-green-50"><input type="number" step="1" class="border rounded p-1 input-sm border-green-300" value="${r.tmpGainLoss}" onchange="updateData('${r.id}', 'tmpGainLoss', this.value); calculateTempoRanks()"></td>`;
-                tbodyHTML += `<td class="bg-red-50"><input type="number" min="1" class="border rounded p-1 input-sm border-red-300" value="${r.tmpFinalRank}" onchange="updateData('${r.id}', 'tmpFinalRank', this.value); calculateTempoRanks()"></td>`;
-                tbodyHTML += `<td class="font-bold text-purple-700 bg-purple-50">${r.tmpRawPts}</td></tr>`;
+                tbodyHTML += `<td class="bg-green-50"><input type="number" step="1" class="border border-green-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-green-500" value="${r.tmpGainLoss}" onchange="updateData('${r.id}', 'tmpGainLoss', this.value); calculateTempoRanks()"></td>`;
+                tbodyHTML += `<td class="bg-red-50"><input type="number" min="1" class="border border-red-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-red-500" value="${r.tmpFinalRank}" onchange="updateData('${r.id}', 'tmpFinalRank', this.value); calculateTempoRanks()"></td>`;
+                tbodyHTML += `<td class="font-bold text-purple-700 bg-purple-50 text-center text-lg">${r.tmpRawPts}</td></tr>`;
             });
             document.getElementById('tempoTbody').innerHTML = tbodyHTML;
             calculateTempoRanks(true);
@@ -355,8 +395,8 @@
             sortedForTempo.forEach((r, idx) => { riders.find(x => x.id === r.id).tmp = idx + 1; });
             if (!skipRender) renderTempoRace();
 
-            document.getElementById('tempoResultsDiv').innerHTML = `<table class="w-full text-sm"><thead class="bg-gray-100"><tr><th class="p-2 border">Pl.</th><th class="p-2 border">Rider</th><th class="p-2 border">Event Pts</th><th class="p-2 border text-purple-700">Omnium Pts</th></tr></thead><tbody>` +
-                sortedForTempo.map((r, i) => `<tr><td class="p-2 border text-center font-bold">${i+1}</td><td class="p-2 border">${r.name}</td><td class="p-2 border text-center">${r.tmpRawPts}</td><td class="p-2 border text-center font-bold text-purple-600">+${getPts(i+1)}</td></tr>`).join('') + `</tbody></table>`;
+            document.getElementById('tempoResultsDiv').innerHTML = `<table class="w-full text-sm text-left"><thead class="bg-gray-100"><tr><th class="p-3 border-b border-r text-center w-12">Pl.</th><th class="p-3 border-b border-r">Rider</th><th class="p-3 border-b border-r text-center">Score</th><th class="p-3 border-b text-center text-purple-700">Omnium Pts</th></tr></thead><tbody>` +
+                sortedForTempo.map((r, i) => `<tr><td class="p-3 border-b border-r text-center font-bold">${i+1}</td><td class="p-3 border-b border-r font-medium">${r.name}</td><td class="p-3 border-b border-r text-center">${r.tmpRawPts}</td><td class="p-3 border-b text-center font-bold text-purple-600 text-lg">+${getPts(i+1)}</td></tr>`).join('') + `</tbody></table>`;
             
             let standings = [...riders].map(r => ({
                 name: r.name, pts: calculateSubtotal(r, 2), tieBreakerRank: r.tmp || 999
@@ -365,8 +405,8 @@
                 return a.tieBreakerRank - b.tieBreakerRank;
             });
 
-            document.getElementById('tempoStandingsDiv').innerHTML = `<table class="w-full text-sm"><thead class="bg-gray-100"><tr><th class="p-2 border">Rank</th><th class="p-2 border">Rider</th><th class="p-2 border text-blue-700">Overall Pts</th></tr></thead><tbody>` +
-                standings.map((r, i) => `<tr class="${i === 0 ? 'bg-yellow-50' : ''}"><td class="p-2 border text-center font-bold">${i+1}</td><td class="p-2 border">${r.name}</td><td class="p-2 border text-center font-bold text-blue-600">${r.pts}</td></tr>`).join('') + `</tbody></table>`;
+            document.getElementById('tempoStandingsDiv').innerHTML = `<table class="w-full text-sm text-left"><thead class="bg-gray-100"><tr><th class="p-3 border-b border-r text-center w-12">Rnk</th><th class="p-3 border-b border-r">Rider</th><th class="p-3 border-b text-center text-blue-700">Overall Pts</th></tr></thead><tbody>` +
+                standings.map((r, i) => `<tr class="${i === 0 ? 'bg-yellow-50/50' : ''}"><td class="p-3 border-b border-r text-center font-bold">${i+1}</td><td class="p-3 border-b border-r font-medium">${r.name}</td><td class="p-3 border-b text-center font-bold text-blue-600 text-lg">${r.pts}</td></tr>`).join('') + `</tbody></table>`;
         }
 
         // --- POINTS RACE LOGIC ---
@@ -380,27 +420,27 @@
 
         function renderPointsRace() {
             let intermediateSprints = totalPointsSprints - 1;
-            let theadHTML = `<tr><th class="sticky-header">Rider</th>`;
+            let theadHTML = `<tr><th class="sticky-corner py-3">Rider</th>`;
             let sprintKeys = [];
             
             for(let i = 1; i <= intermediateSprints; i++) {
-                theadHTML += `<th>S${i}</th>`;
+                theadHTML += `<th class="py-3 px-2">S${i}</th>`;
                 sprintKeys.push(`s${i}`);
             }
             
-            theadHTML += `<th class="bg-blue-100 text-xs">Final Sprint<br>(Double)</th><th class="bg-green-100 text-xs">+/- Laps</th><th class="bg-red-100 text-xs">Final Sp. Rank</th><th class="font-bold">PR Total</th></tr>`;
+            theadHTML += `<th class="bg-blue-100 text-xs px-2 py-3 leading-tight">Final<br>Sprint</th><th class="bg-green-100 text-xs px-2 py-3 leading-tight">+/-<br>Laps</th><th class="bg-red-100 text-xs px-2 py-3 leading-tight">Final<br>Rnk</th><th class="font-bold text-base px-3 py-3 bg-gray-200">Total</th></tr>`;
             document.getElementById('pointsThead').innerHTML = theadHTML;
 
             document.getElementById('prTableBody').innerHTML = riders.map(r => `
-                <tr class="hover:bg-gray-50 border-b">
-                    <td class="sticky-col font-medium p-2">${r.name}</td>
+                <tr class="hover:bg-blue-50/30 transition-colors">
+                    <td class="sticky-col py-3 pr-4">${r.name}</td>
                     ${sprintKeys.map(s => 
-                        `<td><input type="number" min="0" class="border rounded p-1 input-sm" value="${r[s]!==undefined?r[s]:''}" onchange="updateData('${r.id}', '${s}', this.value); document.getElementById('pr-tot-${r.id}').innerText = calculatePRTotal(riders.find(x=>x.id==='${r.id}'))"></td>`
+                        `<td><input type="number" min="0" class="border border-gray-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-blue-500" value="${r[s]!==undefined?r[s]:''}" onchange="updateData('${r.id}', '${s}', this.value); document.getElementById('pr-tot-${r.id}').innerText = calculatePRTotal(riders.find(x=>x.id==='${r.id}'))"></td>`
                     ).join('')}
-                    <td class="bg-blue-50"><input type="number" min="0" class="border rounded p-1 input-sm border-blue-300" value="${r.sf!==undefined?r.sf:''}" onchange="updateData('${r.id}', 'sf', this.value); document.getElementById('pr-tot-${r.id}').innerText = calculatePRTotal(riders.find(x=>x.id==='${r.id}'))"></td>
-                    <td class="bg-green-50"><input type="number" step="1" class="border rounded p-1 input-sm border-green-300" value="${r.laps}" onchange="updateData('${r.id}', 'laps', this.value); document.getElementById('pr-tot-${r.id}').innerText = calculatePRTotal(riders.find(x=>x.id==='${r.id}'))"></td>
-                    <td class="bg-red-50"><input type="number" min="1" class="border rounded p-1 input-sm border-red-300" value="${r.finalRank}" onchange="updateData('${r.id}', 'finalRank', this.value)"></td>
-                    <td class="font-bold text-blue-700 text-center text-lg" id="pr-tot-${r.id}">${calculatePRTotal(r)}</td>
+                    <td class="bg-blue-50"><input type="number" min="0" class="border border-blue-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-blue-500" value="${r.sf!==undefined?r.sf:''}" onchange="updateData('${r.id}', 'sf', this.value); document.getElementById('pr-tot-${r.id}').innerText = calculatePRTotal(riders.find(x=>x.id==='${r.id}'))"></td>
+                    <td class="bg-green-50"><input type="number" step="1" class="border border-green-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-green-500" value="${r.laps}" onchange="updateData('${r.id}', 'laps', this.value); document.getElementById('pr-tot-${r.id}').innerText = calculatePRTotal(riders.find(x=>x.id==='${r.id}'))"></td>
+                    <td class="bg-red-50"><input type="number" min="1" class="border border-red-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-red-500" value="${r.finalRank}" onchange="updateData('${r.id}', 'finalRank', this.value)"></td>
+                    <td class="font-bold text-blue-800 text-center text-xl bg-gray-50/50" id="pr-tot-${r.id}">${calculatePRTotal(r)}</td>
                 </tr>`).join('');
         }
 
@@ -425,17 +465,17 @@
         function renderFinalStandings() {
             let results = getSortedFinalResults();
             document.getElementById('finalTableBody').innerHTML = results.map((r, i) => `
-                <tr class="border-b ${i===0 ? 'bg-yellow-100' : (i===1 ? 'bg-gray-200' : (i===2 ? 'bg-orange-100' : 'bg-white'))}">
-                    <td class="p-2 text-center font-bold text-lg">${i + 1}</td>
-                    <td class="p-2 font-bold">${r.name}</td>
-                    <td class="p-2 text-center">${r.scr||'-'} <span class="text-xs text-gray-400">(${getPts(r.scr)})</span></td>
-                    <td class="p-2 text-center">${r.tmp||'-'} <span class="text-xs text-gray-400">(${getPts(r.tmp)})</span></td>
-                    <td class="p-2 text-center">${r.eli||'-'} <span class="text-xs text-gray-400">(${getPts(r.eli)})</span></td>
-                    <td class="p-2 text-center font-bold bg-gray-50">${r.sub}</td>
-                    <td class="p-2 text-center">${r.spPts}</td>
-                    <td class="p-2 text-center">${r.lpPts}</td>
-                    <td class="p-2 text-center text-red-600 font-bold">${r.finalRank||'-'}</td>
-                    <td class="p-2 text-center font-bold text-xl text-blue-900">${r.total}</td>
+                <tr class="${i===0 ? 'bg-yellow-50/80' : (i===1 ? 'bg-gray-100/80' : (i===2 ? 'bg-orange-50/80' : 'bg-white'))} hover:bg-gray-50">
+                    <td class="py-3 px-2 text-center font-bold text-lg border-b sticky left-0 z-10 bg-inherit">${i + 1}</td>
+                    <td class="py-3 px-4 font-bold border-b sticky left-[45px] z-10 bg-inherit shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${r.name}</td>
+                    <td class="py-3 px-2 text-center border-b">${r.scr||'-'} <span class="text-[10px] text-gray-400 block -mt-1">(${getPts(r.scr)})</span></td>
+                    <td class="py-3 px-2 text-center border-b">${r.tmp||'-'} <span class="text-[10px] text-gray-400 block -mt-1">(${getPts(r.tmp)})</span></td>
+                    <td class="py-3 px-2 text-center border-b">${r.eli||'-'} <span class="text-[10px] text-gray-400 block -mt-1">(${getPts(r.eli)})</span></td>
+                    <td class="py-3 px-2 text-center font-bold bg-gray-100/50 border-b">${r.sub}</td>
+                    <td class="py-3 px-2 text-center border-b">${r.spPts}</td>
+                    <td class="py-3 px-2 text-center border-b">${r.lpPts}</td>
+                    <td class="py-3 px-2 text-center text-red-600 font-bold border-b">${r.finalRank||'-'}</td>
+                    <td class="py-3 px-4 text-center font-black text-2xl text-blue-900 bg-blue-50/30 border-b">${r.total}</td>
                 </tr>
             `).join('');
         }
@@ -456,9 +496,9 @@
             let results = getSortedFinalResults();
             let intermediateSprints = totalPointsSprints - 1;
 
-            let head = [['Rank', 'Rider Name', 'SH', 'TR', 'EL', 'Sub-Tot']];
+            let head = [['Rank', 'Rider Name', 'SH', 'TR', 'EL', 'Sub']];
             for(let i=1; i<=intermediateSprints; i++) { head[0].push(`S${i}`); }
-            head[0].push('Final Sp', 'Lap Pts', 'Fin Rank', 'TOTAL');
+            head[0].push('Fin Sp', 'Lap Pts', 'Fin Rnk', 'TOTAL');
 
             let body = results.map((r, i) => {
                 let row = [
@@ -478,8 +518,8 @@
                 head: head,
                 body: body,
                 theme: 'grid',
-                headStyles: { fillColor: [0, 51, 153], textColor: 255, halign: 'center', fontSize: 9 },
-                bodyStyles: { fontSize: 9, halign: 'center' },
+                headStyles: { fillColor: [0, 51, 153], textColor: 255, halign: 'center', fontSize: 9, cellPadding: 2 },
+                bodyStyles: { fontSize: 9, halign: 'center', cellPadding: 2 },
                 columnStyles: {
                     0: { fontStyle: 'bold' },
                     1: { halign: 'left', fontStyle: 'bold' },
@@ -498,7 +538,7 @@
 
         // Initial Setup
         updateSettings();
-        renderRiderList();
+        renderAll();
     </script>
 </body>
 </html>
