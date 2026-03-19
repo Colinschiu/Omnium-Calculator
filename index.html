@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Pro UCI Calculator v11 (Omnium + PR)</title>
+    <title>Pro UCI Calculator v12 (Omnium + PR)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -56,21 +56,31 @@
     <div class="max-w-screen-2xl mx-auto p-2 sm:p-4 md:p-6">
         
         <header class="mb-4 bg-white p-4 sm:p-6 rounded-lg shadow-sm border-t-4 border-gray-800 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-            <div>
+            <div class="w-full lg:w-auto">
                 <div class="flex items-center gap-3">
                     <h1 class="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">🏁 UCI Track Calculator</h1>
-                    <span id="saveStatus" class="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded border border-green-300 opacity-0 transition-opacity duration-300">Auto-Saved ✓</span>
+                    <span id="saveStatus" class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded border border-gray-300">System Ready</span>
                 </div>
-                <p class="text-gray-500 text-xs sm:text-sm mt-1">v11: Fixed Refresh Redraw & Event Memory</p>
+                <p class="text-gray-500 text-xs sm:text-sm mt-1">v12: Bulletproof Storage & Local File Backups</p>
+                
+                <div class="flex flex-col sm:flex-row w-full gap-2 bg-gray-100 p-1.5 rounded-lg border border-gray-300 mt-3">
+                    <button onclick="switchEventMode('omnium')" id="btn-mode-om" class="flex-1 px-4 py-2 rounded-md font-bold text-sm transition-all bg-blue-600 text-white shadow-sm ring-2 ring-blue-300">
+                        🚴 Omnium Event
+                    </button>
+                    <button onclick="switchEventMode('indep_pr')" id="btn-mode-ipr" class="flex-1 px-4 py-2 rounded-md font-bold text-sm transition-all bg-transparent text-gray-600 hover:bg-gray-200">
+                        🏅 Indep. Points Race
+                    </button>
+                </div>
             </div>
             
-            <div class="flex flex-col sm:flex-row w-full lg:w-auto gap-2 bg-gray-100 p-1.5 rounded-lg border border-gray-300">
-                <button onclick="switchEventMode('omnium')" id="btn-mode-om" class="flex-1 lg:flex-none px-6 py-2.5 rounded-md font-bold text-sm sm:text-base transition-all bg-blue-600 text-white shadow-sm ring-2 ring-blue-300">
-                    🚴 Omnium Event
+            <div class="flex gap-2 w-full lg:w-auto mt-2 lg:mt-0 self-start lg:self-center">
+                <button onclick="downloadBackup()" class="flex-1 bg-gray-800 hover:bg-gray-900 text-white font-bold px-4 py-3 sm:px-6 sm:py-4 rounded-lg shadow-md transition text-sm flex justify-center items-center gap-2 border border-gray-900">
+                    💾 Save Backup File
                 </button>
-                <button onclick="switchEventMode('indep_pr')" id="btn-mode-ipr" class="flex-1 lg:flex-none px-6 py-2.5 rounded-md font-bold text-sm sm:text-base transition-all bg-transparent text-gray-600 hover:bg-gray-200">
-                    🏅 Indep. Points Race
-                </button>
+                <label class="flex-1 bg-gray-800 hover:bg-gray-900 text-white font-bold px-4 py-3 sm:px-6 sm:py-4 rounded-lg shadow-md transition text-sm cursor-pointer m-0 flex justify-center items-center gap-2 border border-gray-900">
+                    📂 Load Backup File
+                    <input type="file" class="hidden" accept=".json" onchange="uploadBackup(event)">
+                </label>
             </div>
         </header>
 
@@ -139,9 +149,9 @@
             </div>
 
             <div id="om-final" class="tab-content om-content bg-white p-4 sm:p-6 rounded-b-lg shadow-sm">
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <h2 class="text-xl sm:text-2xl font-bold text-blue-900">🏆 Omnium Classification</h2>
-                    <button onclick="exportPDF('om')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded shadow">📄 PDF Export</button>
+                    <button onclick="exportPDF('om')" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg shadow-md transition">📄 PDF Export</button>
                 </div>
                 <div class="matrix-container border border-gray-200 rounded-lg bg-white">
                     <table class="matrix-table w-full text-sm text-left">
@@ -199,9 +209,9 @@
             </div>
 
             <div id="ipr-final" class="tab-content ipr-content bg-white p-4 sm:p-6 rounded-b-lg shadow-sm">
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <h2 class="text-xl sm:text-2xl font-bold text-red-900">🏅 Independent PR Classification</h2>
-                    <button onclick="exportPDF('ipr')" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded shadow">📄 PDF Export</button>
+                    <button onclick="exportPDF('ipr')" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-lg shadow-md transition">📄 PDF Export</button>
                 </div>
                 <div class="matrix-container border border-gray-200 rounded-lg bg-white">
                     <table class="matrix-table w-full text-sm text-left">
@@ -216,26 +226,22 @@
     </div>
 
     <script>
-        // --- DATA STATE ---
         const ABSOLUTE_MAX_LAPS = 150; 
         
-        let currentMode = 'omnium'; // Memory for active tab
+        let currentMode = 'omnium'; 
         
-        // OMNIUM STATE
         let omRiders = [];
         let omCfg = { tmp: 40, prTot: 80, prSp: 10, sprints: 8 };
         
-        // INDEP PR STATE
         let iprRiders = [];
         let iprCfg = { prTot: 100, prSp: 10, sprints: 10 };
 
         const eventNames = ["", "Scratch Race", "Tempo Race", "Elimination Race"];
         const eventKeys = ["", "scr", "tmp", "eli"];
 
-        // --- MODE SWITCHER ---
         function switchEventMode(mode) {
             currentMode = mode;
-            saveToStorage(); // Save which view they are in
+            saveToStorage(); 
             
             document.querySelectorAll('.mode-view').forEach(el => el.classList.remove('active'));
             document.getElementById(`app-${mode}`).classList.add('active');
@@ -244,17 +250,16 @@
             const btnIpr = document.getElementById('btn-mode-ipr');
             
             if(mode === 'omnium') {
-                btnOm.className = "flex-1 lg:flex-none px-6 py-2.5 rounded-md font-bold text-sm sm:text-base transition-all bg-blue-600 text-white shadow-sm ring-2 ring-blue-300";
-                btnIpr.className = "flex-1 lg:flex-none px-6 py-2.5 rounded-md font-bold text-sm sm:text-base transition-all bg-transparent text-gray-600 hover:bg-gray-200";
+                btnOm.className = "flex-1 px-4 py-2 rounded-md font-bold text-sm transition-all bg-blue-600 text-white shadow-sm ring-2 ring-blue-300";
+                btnIpr.className = "flex-1 px-4 py-2 rounded-md font-bold text-sm transition-all bg-transparent text-gray-600 hover:bg-gray-200";
                 renderAllOm();
             } else {
-                btnIpr.className = "flex-1 lg:flex-none px-6 py-2.5 rounded-md font-bold text-sm sm:text-base transition-all bg-red-600 text-white shadow-sm ring-2 ring-red-300";
-                btnOm.className = "flex-1 lg:flex-none px-6 py-2.5 rounded-md font-bold text-sm sm:text-base transition-all bg-transparent text-gray-600 hover:bg-gray-200";
+                btnIpr.className = "flex-1 px-4 py-2 rounded-md font-bold text-sm transition-all bg-red-600 text-white shadow-sm ring-2 ring-red-300";
+                btnOm.className = "flex-1 px-4 py-2 rounded-md font-bold text-sm transition-all bg-transparent text-gray-600 hover:bg-gray-200";
                 renderAllIpr();
             }
         }
 
-        // --- TAB LOGIC ---
         function openTab(modePrefix, tabId, btnElement) {
             document.querySelectorAll(`.${modePrefix}-content`).forEach(el => el.classList.remove('active'));
             document.querySelectorAll(`.${modePrefix}-tab`).forEach(el => el.classList.remove('active'));
@@ -263,44 +268,112 @@
             btnElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
 
-        // --- LOCAL STORAGE ---
         function saveToStorage() {
-            localStorage.setItem('uciCalcData_v11', JSON.stringify({
-                omRiders, omCfg, iprRiders, iprCfg, currentMode
-            }));
-            const badge = document.getElementById('saveStatus');
-            if(badge) { badge.style.opacity = '1'; setTimeout(() => { badge.style.opacity = '0'; }, 2000); }
+            try {
+                localStorage.setItem('uciCalcData_v12', JSON.stringify({
+                    omRiders: omRiders, omCfg: omCfg, iprRiders: iprRiders, iprCfg: iprCfg, currentMode: currentMode
+                }));
+                const badge = document.getElementById('saveStatus');
+                if(badge) { 
+                    badge.innerText = "Auto-Saved ✓";
+                    badge.className = "text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded border border-green-300 transition-opacity duration-300 opacity-100";
+                    setTimeout(() => { badge.style.opacity = '0'; }, 2000); 
+                }
+            } catch(e) {
+                const badge = document.getElementById('saveStatus');
+                if(badge) {
+                    badge.innerText = "Storage Blocked!";
+                    badge.className = "text-xs font-bold text-red-700 bg-red-100 px-2 py-1 rounded border border-red-300 opacity-100";
+                }
+                console.warn("Storage blocked by browser security. Use physical Backup File.", e);
+            }
         }
 
         function loadFromStorage() {
             let loadedMode = 'omnium';
-            const saved = localStorage.getItem('uciCalcData_v11');
-            if (saved) {
-                try {
+            try {
+                const saved = localStorage.getItem('uciCalcData_v12');
+                if (saved) {
                     const data = JSON.parse(saved);
-                    omRiders = data.omRiders || [];
+                    omRiders = Array.isArray(data.omRiders) ? data.omRiders : [];
                     omCfg = data.omCfg || { tmp: 40, prTot: 80, prSp: 10, sprints: 8 };
-                    iprRiders = data.iprRiders || [];
+                    iprRiders = Array.isArray(data.iprRiders) ? data.iprRiders : [];
                     iprCfg = data.iprCfg || { prTot: 100, prSp: 10, sprints: 10 };
                     loadedMode = data.currentMode || 'omnium';
 
+                    if(document.getElementById('omCfgTempo')) {
+                        document.getElementById('omCfgTempo').value = omCfg.tmp;
+                        document.getElementById('omCfgPRLaps').value = omCfg.prTot;
+                        document.getElementById('omCfgPRSprint').value = omCfg.prSp;
+                        document.getElementById('iprCfgLaps').value = iprCfg.prTot;
+                        document.getElementById('iprCfgSprint').value = iprCfg.prSp;
+                    }
+                }
+            } catch(e) { console.error("Data load failed.", e); }
+            
+            updateOmSettings(true);
+            updateIprSettings(true);
+            return loadedMode; 
+        }
+
+        function downloadBackup() {
+            const data = JSON.stringify({
+                omRiders: omRiders, omCfg: omCfg, iprRiders: iprRiders, iprCfg: iprCfg, currentMode: currentMode
+            });
+            const blob = new Blob([data], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `UCI_Race_Backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function uploadBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    omRiders = Array.isArray(data.omRiders) ? data.omRiders : [];
+                    omCfg = data.omCfg || { tmp: 40, prTot: 80, prSp: 10, sprints: 8 };
+                    iprRiders = Array.isArray(data.iprRiders) ? data.iprRiders : [];
+                    iprCfg = data.iprCfg || { prTot: 100, prSp: 10, sprints: 10 };
+                    
                     document.getElementById('omCfgTempo').value = omCfg.tmp;
                     document.getElementById('omCfgPRLaps').value = omCfg.prTot;
                     document.getElementById('omCfgPRSprint').value = omCfg.prSp;
-                    
                     document.getElementById('iprCfgLaps').value = iprCfg.prTot;
                     document.getElementById('iprCfgSprint').value = iprCfg.prSp;
-                } catch(e) { console.error("Data load failed.", e); }
-            }
-            updateOmSettings(true);
-            updateIprSettings(true);
-            return loadedMode; // Return the mode to activate it
+                    
+                    currentMode = data.currentMode || 'omnium';
+                    saveToStorage();
+                    
+                    updateOmSettings(true);
+                    updateIprSettings(true);
+                    switchEventMode(currentMode);
+                    
+                    alert("✅ Backup File successfully loaded! All data restored.");
+                } catch(err) {
+                    alert("❌ Invalid backup file format.");
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; 
         }
 
-        // --- COMMON LOGIC ---
         function getPts(rank) { return (!rank || rank <= 0) ? 0 : (rank <= 20 ? 42 - (rank * 2) : 1); }
 
-        // --- ADD / REMOVE RIDERS ---
+        function calculateSubtotal(rider, upToEvent) {
+            let pts = 0;
+            if (upToEvent >= 1) pts += getPts(rider.scr);
+            if (upToEvent >= 2) pts += getPts(rider.tmp);
+            if (upToEvent >= 3) pts += getPts(rider.eli);
+            return pts;
+        }
+
         function createRiderObj(name) {
             let r = { id: 'r_' + Date.now() + Math.random().toString(36).substr(2, 5), name: name, scr: '', tmp: '', eli: '', tmpLaps: Array(ABSOLUTE_MAX_LAPS).fill(false), tmpGainLoss: 0, tmpFinalRank: '', tmpRawPts: 0, sf: '', laps: '', finalRank: '' };
             for(let i=1; i<=ABSOLUTE_MAX_LAPS; i++) { r['s'+i] = ''; }
@@ -353,7 +426,6 @@
             cont.innerHTML = arr.length ? arr.map(r => `<span class="bg-${color}-50 text-${color}-900 border border-${color}-200 px-3 py-1 rounded-lg text-sm font-semibold flex items-center gap-1">${r.name} <button onclick="rmRider('${r.id}', '${mode}')" class="text-red-400 hover:text-red-600 font-bold px-1">×</button></span>`).join('') : '<span class="text-gray-400 text-sm">No riders.</span>';
         }
 
-        // --- OMNIUM SPECIFIC LOGIC ---
         function updateOmSettings(skipSave = false) {
             omCfg.tmp = parseInt(document.getElementById('omCfgTempo').value) || 40;
             omCfg.prTot = parseInt(document.getElementById('omCfgPRLaps').value) || 80;
@@ -364,14 +436,7 @@
             renderOmTempo(); renderOmPointsRace();
         }
 
-        function renderAllOm() { 
-            renderRiderList('om'); 
-            renderOmEvents(1); 
-            renderOmEvents(3); 
-            renderOmTempo(); 
-            renderOmPointsRace(); 
-            renderOmFinal(); 
-        }
+        function renderAllOm() { renderRiderList('om'); renderOmEvents(1); renderOmEvents(3); renderOmTempo(); renderOmPointsRace(); renderOmFinal(); }
 
         function renderOmEvents(eId) {
             const k = eventKeys[eId];
@@ -399,7 +464,6 @@
         }
 
         function toggleOmTmp(rId, i, chk) { if(chk) omRiders.forEach(r => {if(r.id!==rId) r.tmpLaps[i]=false;}); omRiders.find(r=>r.id===rId).tmpLaps[i]=chk; saveToStorage(); renderOmTempo(); }
-        
         function calcOmTmp(skip=false) {
             let s = [...omRiders].sort((a,b)=>b.tmpRawPts!==a.tmpRawPts ? b.tmpRawPts-a.tmpRawPts : (a.tmpFinalRank||999)-(b.tmpFinalRank||999));
             s.forEach((r,i) => { omRiders.find(x=>x.id===r.id).tmp = i+1; });
@@ -435,7 +499,6 @@
             document.getElementById('omFinalBody').innerHTML = getOmFinal().map((r,i) => `<tr class="${i===0?'bg-yellow-50':(i===1?'bg-gray-100':(i===2?'bg-orange-50':''))} border-b"><td class="py-2 px-2 text-center font-bold sticky left-0 z-10 bg-inherit">${i+1}</td><td class="py-2 px-4 font-bold sticky left-[45px] z-10 bg-inherit shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${r.name}</td><td class="text-center">${r.scr||'-'}</td><td class="text-center">${r.tmp||'-'}</td><td class="text-center">${r.eli||'-'}</td><td class="text-center font-bold bg-gray-100">${r.sub}</td><td class="text-center">${r.sp}</td><td class="text-center">${r.lp}</td><td class="text-center text-red-600">${r.finalRank||'-'}</td><td class="text-center font-black text-xl text-blue-900 bg-blue-50/50">${r.tot}</td></tr>`).join('');
         }
 
-        // --- INDEPENDENT POINTS RACE LOGIC ---
         function updateIprSettings(skipSave = false) {
             iprCfg.prTot = parseInt(document.getElementById('iprCfgLaps').value) || 100;
             iprCfg.prSp = parseInt(document.getElementById('iprCfgSprint').value) || 10;
@@ -445,11 +508,7 @@
             renderIprPointsRace();
         }
 
-        function renderAllIpr() { 
-            renderRiderList('ipr'); 
-            renderIprPointsRace(); 
-            renderIprFinal(); 
-        }
+        function renderAllIpr() { renderRiderList('ipr'); renderIprPointsRace(); renderIprFinal(); }
 
         function calcIprTot(r) { let s=0; for(let i=1; i<iprCfg.sprints; i++) s+=(r['s'+i]||0); return s+(r.sf||0)+((r.laps||0)*20); }
         function renderIprPointsRace() {
@@ -476,7 +535,6 @@
             document.getElementById('iprFinalBody').innerHTML = getIprFinal().map((r,i) => `<tr class="${i===0?'bg-red-50':(i===1?'bg-gray-100':(i===2?'bg-orange-50':''))} border-b"><td class="py-2 px-2 text-center font-bold sticky left-0 z-10 bg-inherit">${i+1}</td><td class="py-2 px-4 font-bold sticky left-[45px] z-10 bg-inherit shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${r.name}</td><td class="text-center">${r.sp}</td><td class="text-center">${r.lp}</td><td class="text-center text-red-600">${r.finalRank||'-'}</td><td class="text-center font-black text-xl text-red-900 bg-red-50/50">${r.tot}</td></tr>`).join('');
         }
 
-        // --- PDF EXPORT LOGIC ---
         function exportPDF(mode) {
             const arr = mode === 'om' ? omRiders : iprRiders;
             if(!arr.length) { alert("No riders/data."); return; }
@@ -518,9 +576,11 @@
             doc.save(mode==='om' ? 'UCI_Omnium_Final.pdf' : 'UCI_Points_Race_Final.pdf');
         }
 
-        // Initialize App
-        let initialMode = loadFromStorage();
-        switchEventMode(initialMode); // Instantly forces all tables to redraw
+        // Wait until HTML is 100% loaded before drawing tables
+        document.addEventListener('DOMContentLoaded', () => {
+            let initialMode = loadFromStorage();
+            switchEventMode(initialMode);
+        });
     </script>
 </body>
 </html>
