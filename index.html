@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Pro UCI Omnium Calculator v7</title>
+    <title>Pro UCI Omnium Calculator v8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -63,7 +63,7 @@
                     <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900 flex items-center gap-2">🚴 Pro UCI Omnium</h1>
                     <span id="saveStatus" class="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded border border-green-300 opacity-0 transition-opacity duration-300">Auto-Saved ✓</span>
                 </div>
-                <p class="text-gray-500 text-xs sm:text-sm mt-1">v7: Browser Auto-Save & Clarified PR Inputs</p>
+                <p class="text-gray-500 text-xs sm:text-sm mt-1">v8: Password Protected Deletion & Offline Ready</p>
             </div>
             <button onclick="exportUCIPDF()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-3 rounded-lg shadow-md transition flex justify-center items-center gap-2 text-base">
                 📄 Export UCI PDF
@@ -230,12 +230,10 @@
                     configTotalLaps = data.configTotalLaps || 80;
                     configLapsPerSprint = data.configLapsPerSprint || 10;
 
-                    // Update UI inputs to reflect loaded config
                     document.getElementById('settingTempoLaps').value = configTempoLaps;
                     document.getElementById('prTotalLaps').value = configTotalLaps;
                     document.getElementById('prLapsPerSprint').value = configLapsPerSprint;
                     
-                    // Re-calculate derived sprint amounts based on loaded data
                     updateSettings(true); 
                 } catch (e) {
                     console.error("Error loading local storage data.", e);
@@ -286,7 +284,7 @@
             renderPointsRace();
         }
 
-        // --- BULK REGISTRATION ---
+        // --- BULK REGISTRATION & DELETION (WITH PASSWORD) ---
         document.getElementById('addRiderForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const nameInput = document.getElementById('riderName');
@@ -320,12 +318,23 @@
             }
         });
 
+        // --- PASSWORD PROTECTED WIPE ---
         function clearAllRiders() {
-            if(confirm("WARNING: Are you sure you want to clear all riders and reset ALL results? This cannot be undone.")) {
-                riders = [];
-                localStorage.removeItem('omniumRaceData'); // Clear storage fully
-                renderAll();
+            // Prompt user for password to prevent accidental deletion
+            const pwd = prompt("WARNING: This will clear all riders and reset ALL results.\n\nPlease enter the authorization password to proceed:");
+            
+            if (pwd === "hkcyc") {
+                if(confirm("Password accepted. Are you absolutely sure you want to delete everything? This cannot be undone.")) {
+                    riders = [];
+                    localStorage.removeItem('omniumRaceData'); // Clear storage fully
+                    renderAll();
+                    alert("All race data has been successfully cleared.");
+                }
+            } else if (pwd !== null) {
+                // User entered something but it was wrong
+                alert("❌ Incorrect password. Data reset aborted.");
             }
+            // If pwd === null, user clicked "Cancel", so we just do nothing silently.
         }
 
         function renderRiderList() {
