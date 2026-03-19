@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Pro UCI Omnium Calculator v8</title>
+    <title>Pro UCI Omnium Calculator v9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -63,20 +63,21 @@
                     <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900 flex items-center gap-2">🚴 Pro UCI Omnium</h1>
                     <span id="saveStatus" class="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded border border-green-300 opacity-0 transition-opacity duration-300">Auto-Saved ✓</span>
                 </div>
-                <p class="text-gray-500 text-xs sm:text-sm mt-1">v8: Password Protected Deletion & Offline Ready</p>
+                <p class="text-gray-500 text-xs sm:text-sm mt-1">v9: Includes Standalone Points Race Calculator</p>
             </div>
-            <button onclick="exportUCIPDF()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-3 rounded-lg shadow-md transition flex justify-center items-center gap-2 text-base">
-                📄 Export UCI PDF
+            <button onclick="exportUCIPDF()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-lg shadow-md transition flex justify-center items-center gap-2 text-base">
+                📄 Export OMNIUM PDF
             </button>
         </header>
 
         <div class="tabs-container border-b border-gray-300 mb-4 bg-white rounded-t-lg shadow-sm text-sm sm:text-base">
-            <button class="tab-btn active px-5 py-4 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-reg', this)">0. Setup</button>
-            <button class="tab-btn px-5 py-4 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-scr', this); renderEventView(1)">1. Scratch</button>
-            <button class="tab-btn px-5 py-4 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-tmp', this); renderTempoRace()">2. Tempo Race</button>
-            <button class="tab-btn px-5 py-4 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-eli', this); renderEventView(3)">3. Elimination</button>
-            <button class="tab-btn px-5 py-4 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-pts', this); renderPointsRace()">4. Points Race</button>
-            <button class="tab-btn px-5 py-4 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-final', this); renderFinalStandings()">🏆 Final Standings</button>
+            <button class="tab-btn active px-4 py-3 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-reg', this)">0. Setup</button>
+            <button class="tab-btn px-4 py-3 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-scr', this); renderEventView(1)">1. Scratch</button>
+            <button class="tab-btn px-4 py-3 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-tmp', this); renderTempoRace()">2. Tempo</button>
+            <button class="tab-btn px-4 py-3 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-eli', this); renderEventView(3)">3. Elimination</button>
+            <button class="tab-btn px-4 py-3 hover:bg-gray-50 focus:outline-none" onclick="openTab('tab-pts', this); renderPointsRace()">4. Pts Race</button>
+            <button class="tab-btn px-4 py-3 hover:bg-gray-50 focus:outline-none text-red-600" onclick="openTab('tab-pr-standings', this); renderPRStandings()">5. PR Standings</button>
+            <button class="tab-btn px-4 py-3 hover:bg-gray-50 focus:outline-none text-yellow-600" onclick="openTab('tab-final', this); renderFinalStandings()">🏆 Omnium Final</button>
         </div>
 
         <div id="tab-reg" class="tab-content active bg-white p-4 sm:p-6 rounded-b-lg shadow-sm">
@@ -155,7 +156,7 @@
 
         <div id="tab-pts" class="tab-content bg-white p-4 sm:p-6 rounded-b-lg shadow-sm">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-                <h2 class="text-lg sm:text-xl font-bold text-blue-900">Points Race Matrix</h2>
+                <h2 class="text-lg sm:text-xl font-bold text-blue-900">Points Race Matrix (Data Entry)</h2>
                 <span class="bg-blue-100 text-blue-800 text-xs sm:text-sm font-bold px-3 py-1 rounded-full" id="pointsStatusBadge">80 Laps (8 Sprints)</span>
             </div>
             <div class="matrix-container border border-gray-200 rounded-lg bg-white">
@@ -166,8 +167,33 @@
             </div>
         </div>
 
+        <div id="tab-pr-standings" class="tab-content bg-white p-4 sm:p-6 rounded-b-lg shadow-sm">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
+                <h2 class="text-xl sm:text-2xl font-bold text-red-900 uppercase tracking-wide">🏅 Points Race (Standalone) Classification</h2>
+                <button onclick="exportPRPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-lg shadow-md transition flex justify-center items-center gap-2">
+                    📄 Export PR PDF
+                </button>
+            </div>
+            <p class="text-sm text-gray-600 mb-4">This leaderboard shows results for the Points Race only. It ignores Omnium Subtotals (Scratch, Tempo, Elimination).</p>
+            <div class="matrix-container border border-gray-200 rounded-lg bg-white">
+                <table class="matrix-table w-full text-sm text-left">
+                    <thead class="bg-gray-800 text-white">
+                        <tr>
+                            <th class="py-3 px-2 text-center sticky left-0 bg-gray-900 z-20">Rank</th>
+                            <th class="py-3 px-4 sticky left-[45px] bg-gray-900 z-20">Rider</th>
+                            <th class="py-3 px-2 text-center">Sprint Pts</th>
+                            <th class="py-3 px-2 text-center">Lap Pts</th>
+                            <th class="py-3 px-2 text-center text-red-300">Final Sp. Rank</th>
+                            <th class="py-3 px-4 text-center font-bold text-yellow-300 text-lg bg-gray-900">PR Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prStandingsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
         <div id="tab-final" class="tab-content bg-white p-4 sm:p-6 rounded-b-lg shadow-sm">
-            <h2 class="text-xl sm:text-2xl font-bold mb-6 text-blue-900 text-center uppercase tracking-wide">🏆 Final Classification</h2>
+            <h2 class="text-xl sm:text-2xl font-bold mb-6 text-blue-900 text-center uppercase tracking-wide">🏆 Omnium Final Classification</h2>
             <div class="matrix-container border border-gray-200 rounded-lg bg-white">
                 <table class="matrix-table w-full text-sm text-left">
                     <thead class="bg-gray-800 text-white">
@@ -212,7 +238,6 @@
             };
             localStorage.setItem('omniumRaceData', JSON.stringify(data));
             
-            // Show saved badge
             const badge = document.getElementById('saveStatus');
             if(badge) {
                 badge.style.opacity = '1';
@@ -239,11 +264,10 @@
                     console.error("Error loading local storage data.", e);
                 }
             } else {
-                updateSettings(true); // default initialization
+                updateSettings(true); 
             }
         }
 
-        // --- MATH / LOGIC ---
         function getPts(rank) {
             if (!rank || rank <= 0) return 0;
             if (rank <= 20) return 42 - (rank * 2);
@@ -284,7 +308,7 @@
             renderPointsRace();
         }
 
-        // --- BULK REGISTRATION & DELETION (WITH PASSWORD) ---
+        // --- BULK REGISTRATION ---
         document.getElementById('addRiderForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const nameInput = document.getElementById('riderName');
@@ -320,21 +344,17 @@
 
         // --- PASSWORD PROTECTED WIPE ---
         function clearAllRiders() {
-            // Prompt user for password to prevent accidental deletion
             const pwd = prompt("WARNING: This will clear all riders and reset ALL results.\n\nPlease enter the authorization password to proceed:");
-            
             if (pwd === "hkcyc") {
                 if(confirm("Password accepted. Are you absolutely sure you want to delete everything? This cannot be undone.")) {
                     riders = [];
-                    localStorage.removeItem('omniumRaceData'); // Clear storage fully
+                    localStorage.removeItem('omniumRaceData'); 
                     renderAll();
                     alert("All race data has been successfully cleared.");
                 }
             } else if (pwd !== null) {
-                // User entered something but it was wrong
                 alert("❌ Incorrect password. Data reset aborted.");
             }
-            // If pwd === null, user clicked "Cancel", so we just do nothing silently.
         }
 
         function renderRiderList() {
@@ -360,7 +380,7 @@
             const rider = riders.find(r => r.id === id);
             if (rider) { 
                 rider[field] = value === '' ? '' : Number(value); 
-                saveToStorage(); // Auto save on every input change!
+                saveToStorage();
             }
         }
 
@@ -370,6 +390,7 @@
             renderEventView(3);
             renderTempoRace();
             renderPointsRace();
+            renderPRStandings();
             renderFinalStandings();
         }
 
@@ -431,7 +452,7 @@
         function toggleTempoLap(riderId, lapIndex, isChecked) {
             if (isChecked) { riders.forEach(r => { if (r.id !== riderId) r.tmpLaps[lapIndex] = false; }); }
             riders.find(r => r.id === riderId).tmpLaps[lapIndex] = isChecked;
-            saveToStorage(); // Auto save lap checkbox clicks!
+            saveToStorage(); 
             renderTempoRace(); 
         }
 
@@ -472,7 +493,6 @@
         function renderPointsRace() {
             let intermediateSprints = totalPointsSprints - 1;
             
-            // UI CLARIFICATIONS IMPLEMENTED IN HEADERS
             let theadHTML = `<tr><th class="sticky-corner py-3">Rider</th>`;
             let sprintKeys = [];
             
@@ -492,15 +512,45 @@
                 <tr class="hover:bg-blue-50/30 transition-colors">
                     <td class="sticky-col py-3 pr-4">${r.name}</td>
                     ${sprintKeys.map(s => 
-                        `<td><input type="number" min="0" class="border border-gray-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-blue-500" value="${r[s]!==undefined?r[s]:''}" onchange="updateData('${r.id}', '${s}', this.value); document.getElementById('pr-tot-${r.id}').innerText = calculatePRTotal(riders.find(x=>x.id==='${r.id}'))"></td>`
+                        `<td><input type="number" min="0" class="border border-gray-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-blue-500" value="${r[s]!==undefined?r[s]:''}" onchange="updateData('${r.id}', '${s}', this.value); document.getElementById('pr-tot-${r.id}').innerText = calculatePRTotal(riders.find(x=>x.id==='${r.id}')); renderPRStandings();"></td>`
                     ).join('')}
-                    <td class="bg-blue-50"><input type="number" min="0" class="border border-blue-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-blue-500" value="${r.sf!==undefined?r.sf:''}" onchange="updateData('${r.id}', 'sf', this.value); document.getElementById('pr-tot-${r.id}').innerText = calculatePRTotal(riders.find(x=>x.id==='${r.id}'))"></td>
-                    <td class="bg-green-50"><input type="number" step="1" class="border border-green-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-green-500" value="${r.laps}" onchange="updateData('${r.id}', 'laps', this.value); document.getElementById('pr-tot-${r.id}').innerText = calculatePRTotal(riders.find(x=>x.id==='${r.id}'))"></td>
-                    <td class="bg-red-50"><input type="number" min="1" class="border border-red-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-red-500" value="${r.finalRank}" onchange="updateData('${r.id}', 'finalRank', this.value)"></td>
+                    <td class="bg-blue-50"><input type="number" min="0" class="border border-blue-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-blue-500" value="${r.sf!==undefined?r.sf:''}" onchange="updateData('${r.id}', 'sf', this.value); document.getElementById('pr-tot-${r.id}').innerText = calculatePRTotal(riders.find(x=>x.id==='${r.id}')); renderPRStandings();"></td>
+                    <td class="bg-green-50"><input type="number" step="1" class="border border-green-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-green-500" value="${r.laps}" onchange="updateData('${r.id}', 'laps', this.value); document.getElementById('pr-tot-${r.id}').innerText = calculatePRTotal(riders.find(x=>x.id==='${r.id}')); renderPRStandings();"></td>
+                    <td class="bg-red-50"><input type="number" min="1" class="border border-red-300 rounded-lg p-2 input-sm focus:ring-2 focus:ring-red-500" value="${r.finalRank}" onchange="updateData('${r.id}', 'finalRank', this.value); renderPRStandings();"></td>
                     <td class="font-bold text-blue-800 text-center text-xl bg-gray-50/50" id="pr-tot-${r.id}">${calculatePRTotal(r)}</td>
                 </tr>`).join('');
         }
 
+        // --- STANDALONE POINTS RACE (TAB 5) LOGIC ---
+        function renderPRStandings() {
+            let intermediateSprints = totalPointsSprints - 1;
+            let results = riders.map(r => {
+                let spPts = 0;
+                for(let i = 1; i <= intermediateSprints; i++) { spPts += (r['s'+i] || 0); }
+                spPts += (r.sf || 0);
+                let lpPts = (r.laps||0) * 20;
+                let prTotal = spPts + lpPts;
+                return { ...r, spPts, lpPts, prTotal };
+            }).sort((a, b) => {
+                if (b.prTotal !== a.prTotal) return b.prTotal - a.prTotal;
+                let rankA = (a.finalRank && a.finalRank > 0) ? a.finalRank : 999;
+                let rankB = (b.finalRank && b.finalRank > 0) ? b.finalRank : 999;
+                return rankA - rankB;
+            });
+
+            document.getElementById('prStandingsTableBody').innerHTML = results.map((r, i) => `
+                <tr class="${i===0 ? 'bg-red-50/50' : (i===1 ? 'bg-gray-100/80' : (i===2 ? 'bg-orange-50/80' : 'bg-white'))} hover:bg-gray-50">
+                    <td class="py-3 px-2 text-center font-bold text-lg border-b sticky left-0 z-10 bg-inherit">${i + 1}</td>
+                    <td class="py-3 px-4 font-bold border-b sticky left-[45px] z-10 bg-inherit shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${r.name}</td>
+                    <td class="py-3 px-2 text-center border-b">${r.spPts}</td>
+                    <td class="py-3 px-2 text-center border-b">${r.lpPts}</td>
+                    <td class="py-3 px-2 text-center text-red-600 font-bold border-b">${r.finalRank||'-'}</td>
+                    <td class="py-3 px-4 text-center font-black text-2xl text-red-900 bg-red-50/30 border-b">${r.prTotal}</td>
+                </tr>
+            `).join('');
+        }
+
+        // --- FULL OMNIUM FINAL STANDINGS (TAB 6) LOGIC ---
         function getSortedFinalResults() {
             let intermediateSprints = totalPointsSprints - 1;
             return riders.map(r => {
@@ -518,7 +568,6 @@
             });
         }
 
-        // --- FINAL STANDINGS ---
         function renderFinalStandings() {
             let results = getSortedFinalResults();
             document.getElementById('finalTableBody').innerHTML = results.map((r, i) => `
@@ -537,7 +586,7 @@
             `).join('');
         }
 
-        // --- UCI PDF EXPORT (jsPDF) ---
+        // --- OMNIUM PDF EXPORT ---
         function exportUCIPDF() {
             if(riders.length === 0) { alert("Please add riders and results first."); return; }
             const { jsPDF } = window.jspdf;
@@ -591,6 +640,62 @@
             doc.text("President of the Commissaires' Panel: __________________________", 150, finalY + 10);
 
             doc.save('UCI_Omnium_Final_Classification.pdf');
+        }
+
+        // --- STANDALONE POINTS RACE PDF EXPORT ---
+        function exportPRPDF() {
+            if(riders.length === 0) { alert("Please add riders and results first."); return; }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('portrait'); // Portrait is better for fewer columns
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.text("POINTS RACE - FINAL CLASSIFICATION", 14, 15);
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Race Distance: ${configTotalLaps} Laps | Sprints: ${totalPointsSprints}`, 14, 22);
+
+            let intermediateSprints = totalPointsSprints - 1;
+            let results = riders.map(r => {
+                let spPts = 0;
+                for(let i = 1; i <= intermediateSprints; i++) { spPts += (r['s'+i] || 0); }
+                spPts += (r.sf || 0);
+                let lpPts = (r.laps||0) * 20;
+                let prTotal = spPts + lpPts;
+                return { ...r, spPts, lpPts, prTotal };
+            }).sort((a, b) => {
+                if (b.prTotal !== a.prTotal) return b.prTotal - a.prTotal;
+                let rankA = (a.finalRank && a.finalRank > 0) ? a.finalRank : 999;
+                let rankB = (b.finalRank && b.finalRank > 0) ? b.finalRank : 999;
+                return rankA - rankB;
+            });
+
+            let head = [['Rank', 'Rider Name', 'Sprint Pts', 'Lap Pts', 'Final Sprint Rank', 'TOTAL']];
+            
+            let body = results.map((r, i) => [
+                i + 1, r.name, r.spPts, r.lpPts, r.finalRank || '-', r.prTotal
+            ]);
+
+            doc.autoTable({
+                startY: 30,
+                head: head,
+                body: body,
+                theme: 'grid',
+                headStyles: { fillColor: [153, 0, 0], textColor: 255, halign: 'center', fontSize: 10, cellPadding: 3 },
+                bodyStyles: { fontSize: 10, halign: 'center', cellPadding: 3 },
+                columnStyles: {
+                    0: { fontStyle: 'bold' },
+                    1: { halign: 'left', fontStyle: 'bold' },
+                    5: { fillColor: [255, 230, 230], fontStyle: 'bold', fontSize: 11 }
+                }
+            });
+
+            let finalY = doc.lastAutoTable.finalY || 40;
+            doc.setFontSize(9);
+            doc.text(`Generated at: ${new Date().toLocaleString()}`, 14, finalY + 10);
+            doc.text("President of the Commissaires' Panel: __________________________", 100, finalY + 10);
+
+            doc.save('UCI_Points_Race_Classification.pdf');
         }
 
         // Initialize App by loading saved data
