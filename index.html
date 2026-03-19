@@ -477,7 +477,7 @@
         function renderOmPointsRace() {
             let th = `<tr><th class="sticky-corner py-2">Rider</th>`;
             for(let i=1; i<omCfg.sprints; i++) th += `<th class="text-xs px-1">S${i}<br>(Pts)</th>`;
-            th += `<th class="bg-blue-100 text-xs px-1">Fin Sp<br>(x2)</th><th class="bg-green-100 text-xs px-1">+/- Lap</th><th class="bg-red-100 text-xs px-1">Fin Rnk</th><th class="bg-gray-200">Tot</th></tr>`;
+            th += `<th class="bg-blue-100 text-xs px-1">Fin Sp<br></th><th class="bg-green-100 text-xs px-1">+/- Lap</th><th class="bg-red-100 text-xs px-1">Fin Rnk</th><th class="bg-gray-200">Tot</th></tr>`;
             document.getElementById('omPtsHead').innerHTML = th;
             document.getElementById('omPtsBody').innerHTML = omRiders.map(r => `<tr><td class="sticky-col">${r.name}</td>` + 
                 Array.from({length:omCfg.sprints-1}, (_,i) => i+1).map(i => `<td><input type="number" min="0" class="border rounded p-1 input-sm mx-auto block" value="${r['s'+i]!==undefined?r['s'+i]:''}" onchange="updateData('${r.id}','s${i}',this.value,'om'); document.getElementById('om-ptot-${r.id}').innerText=calcOmPrTot(omRiders.find(x=>x.id==='${r.id}')); renderOmFinal();"></td>`).join('') +
