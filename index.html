@@ -3,58 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Pro UCI Omnium Calculator v6</title>
+    <title>Pro UCI Omnium Calculator v7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        /* Anti-Zoom on iOS: Inputs must be at least 16px */
         input[type="number"], input[type="text"], textarea { font-size: 16px !important; }
-        
         .input-sm { width: 60px; text-align: center; padding: 8px 4px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s; }
-        
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Sleek scrollable tabs for mobile */
         .tabs-container {
             display: flex; overflow-x: auto; white-space: nowrap; 
-            -ms-overflow-style: none; scrollbar-width: none; /* Hide scrollbar */
+            -ms-overflow-style: none; scrollbar-width: none; 
             -webkit-overflow-scrolling: touch;
         }
         .tabs-container::-webkit-scrollbar { display: none; }
         .tab-btn { flex: 0 0 auto; transition: all 0.2s ease; border-bottom: 3px solid transparent; }
         .tab-btn.active { border-bottom: 3px solid #2563eb; color: #1e40af; background-color: #eff6ff; font-weight: bold; }
-        
-        /* Matrix Tables - Mobile Optimized */
         .matrix-container { 
             overflow-x: auto; max-width: 100%; padding-bottom: 15px; 
             -webkit-overflow-scrolling: touch; 
-            box-shadow: inset -10px 0 10px -10px rgba(0,0,0,0.1); /* visual cue for scrolling */
+            box-shadow: inset -10px 0 10px -10px rgba(0,0,0,0.1); 
         }
-        .matrix-table { border-collapse: separate; border-spacing: 0; w-full; }
+        .matrix-table { border-collapse: separate; border-spacing: 0; width: 100%; }
         .matrix-table th, .matrix-table td { 
             min-width: 45px; text-align: center; padding: 8px 4px; 
             border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;
         }
         .matrix-table th { border-top: 1px solid #e5e7eb; }
-        
-        /* Mobile friendly large checkboxes */
         .lap-checkbox { 
             width: 24px; height: 24px; cursor: pointer; accent-color: #2563eb; 
             display: block; margin: 0 auto;
         }
-        
-        /* Advanced Sticky Columns for smooth horizontal scrolling */
         .sticky-col { 
             position: sticky; left: 0; background-color: #ffffff; z-index: 10; 
             font-weight: bold; text-align: left !important; padding-left: 12px !important;
             border-right: 2px solid #cbd5e1 !important;
-            box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); /* Depth on scroll */
+            box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1); 
         }
         .sticky-header { 
             position: sticky; top: 0; z-index: 11; background-color: #e5e7eb; 
@@ -71,8 +59,11 @@
     <div class="max-w-screen-2xl mx-auto p-2 sm:p-4 md:p-6">
         <header class="mb-4 bg-white p-4 sm:p-6 rounded-lg shadow-sm border-t-4 border-blue-600 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900 flex items-center gap-2">🚴 Pro UCI Omnium</h1>
-                <p class="text-gray-500 text-xs sm:text-sm mt-1">Cross-Device Optimized • Automated Laps</p>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900 flex items-center gap-2">🚴 Pro UCI Omnium</h1>
+                    <span id="saveStatus" class="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded border border-green-300 opacity-0 transition-opacity duration-300">Auto-Saved ✓</span>
+                </div>
+                <p class="text-gray-500 text-xs sm:text-sm mt-1">v7: Browser Auto-Save & Clarified PR Inputs</p>
             </div>
             <button onclick="exportUCIPDF()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-3 rounded-lg shadow-md transition flex justify-center items-center gap-2 text-base">
                 📄 Export UCI PDF
@@ -95,7 +86,7 @@
                 <textarea id="riderName" rows="3" placeholder="Paste names from Excel or type comma-separated names here..." class="border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 w-full resize-y" required></textarea>
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow w-full sm:w-auto">Add All Riders</button>
-                    <button type="button" onclick="clearAllRiders()" class="bg-gray-100 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-red-50 hover:text-red-700 transition w-full sm:w-auto font-medium">Clear List</button>
+                    <button type="button" onclick="clearAllRiders()" class="bg-gray-100 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-red-50 hover:text-red-700 transition w-full sm:w-auto font-medium">Clear All Data (Reset)</button>
                 </div>
             </form>
             <div id="riderList" class="flex flex-wrap gap-2 mb-8 border-b pb-6"></div>
@@ -211,6 +202,50 @@
         const eventNames = ["", "Scratch Race", "Tempo Race", "Elimination Race"];
         const eventKeys = ["", "scr", "tmp", "eli"];
 
+        // --- LOCAL STORAGE (AUTO-SAVE) LOGIC ---
+        function saveToStorage() {
+            const data = {
+                riders: riders,
+                configTempoLaps: configTempoLaps,
+                configTotalLaps: configTotalLaps,
+                configLapsPerSprint: configLapsPerSprint
+            };
+            localStorage.setItem('omniumRaceData', JSON.stringify(data));
+            
+            // Show saved badge
+            const badge = document.getElementById('saveStatus');
+            if(badge) {
+                badge.style.opacity = '1';
+                setTimeout(() => { badge.style.opacity = '0'; }, 2000);
+            }
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('omniumRaceData');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    riders = data.riders || [];
+                    configTempoLaps = data.configTempoLaps || 40;
+                    configTotalLaps = data.configTotalLaps || 80;
+                    configLapsPerSprint = data.configLapsPerSprint || 10;
+
+                    // Update UI inputs to reflect loaded config
+                    document.getElementById('settingTempoLaps').value = configTempoLaps;
+                    document.getElementById('prTotalLaps').value = configTotalLaps;
+                    document.getElementById('prLapsPerSprint').value = configLapsPerSprint;
+                    
+                    // Re-calculate derived sprint amounts based on loaded data
+                    updateSettings(true); 
+                } catch (e) {
+                    console.error("Error loading local storage data.", e);
+                }
+            } else {
+                updateSettings(true); // default initialization
+            }
+        }
+
+        // --- MATH / LOGIC ---
         function getPts(rank) {
             if (!rank || rank <= 0) return 0;
             if (rank <= 20) return 42 - (rank * 2);
@@ -230,12 +265,10 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             if(btnElement) btnElement.classList.add('active');
-            
-            // Auto scroll active tab into view on mobile
             btnElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
 
-        function updateSettings() {
+        function updateSettings(skipSave = false) {
             configTempoLaps = parseInt(document.getElementById('settingTempoLaps').value) || 40;
             configTotalLaps = parseInt(document.getElementById('prTotalLaps').value) || 80;
             configLapsPerSprint = parseInt(document.getElementById('prLapsPerSprint').value) || 10;
@@ -246,6 +279,8 @@
             document.getElementById('calculatedSprintsDisplay').innerText = totalPointsSprints;
             document.getElementById('tempoStatusBadge').innerText = configTempoLaps + " Laps";
             document.getElementById('pointsStatusBadge').innerText = `${configTotalLaps} Laps (${totalPointsSprints} Sprints)`;
+
+            if (!skipSave) { saveToStorage(); }
 
             renderTempoRace();
             renderPointsRace();
@@ -278,6 +313,7 @@
 
             if (addedCount > 0) {
                 nameInput.value = '';
+                saveToStorage();
                 renderAll();
             } else {
                 alert("No new riders were added. Make sure they aren't duplicates.");
@@ -285,8 +321,9 @@
         });
 
         function clearAllRiders() {
-            if(confirm("Are you sure you want to clear all riders and reset all results?")) {
+            if(confirm("WARNING: Are you sure you want to clear all riders and reset ALL results? This cannot be undone.")) {
                 riders = [];
+                localStorage.removeItem('omniumRaceData'); // Clear storage fully
                 renderAll();
             }
         }
@@ -306,12 +343,16 @@
 
         function removeRider(id) {
             riders = riders.filter(r => r.id !== id);
+            saveToStorage();
             renderAll();
         }
 
         function updateData(id, field, value) {
             const rider = riders.find(r => r.id === id);
-            if (rider) { rider[field] = value === '' ? '' : Number(value); }
+            if (rider) { 
+                rider[field] = value === '' ? '' : Number(value); 
+                saveToStorage(); // Auto save on every input change!
+            }
         }
 
         function renderAll() {
@@ -323,7 +364,7 @@
             renderFinalStandings();
         }
 
-        // --- SCRATCH & ELIMINATION (Responsive View) ---
+        // --- SCRATCH & ELIMINATION ---
         function renderEventView(eventId) {
             const container = document.getElementById(`view-${eventId}`);
             const key = eventKeys[eventId];
@@ -355,9 +396,9 @@
 
         // --- TEMPO RACE LOGIC ---
         function renderTempoRace() {
-            let theadHTML = `<tr><th class="sticky-corner">Rider</th>`;
-            for(let i = 1; i <= configTempoLaps; i++) { theadHTML += `<th class="text-xs sm:text-sm text-gray-500 font-normal py-2" title="Lap ${i}">L${i}</th>`; }
-            theadHTML += `<th class="bg-green-100 px-2 py-2 whitespace-nowrap">+/- Laps</th><th class="bg-red-100 px-2 py-2 whitespace-nowrap">Final Rnk</th><th class="bg-purple-100 px-2 py-2 whitespace-nowrap">Event Pts</th></tr>`;
+            let theadHTML = `<tr><th class="sticky-corner py-2 px-2 text-center leading-tight">Rider</th>`;
+            for(let i = 1; i <= configTempoLaps; i++) { theadHTML += `<th class="text-xs sm:text-sm text-gray-500 font-normal py-2 text-center leading-tight" title="Lap ${i}">L${i}</th>`; }
+            theadHTML += `<th class="bg-green-100 px-2 py-2 text-center leading-tight whitespace-nowrap">+/- Laps<br><span class="text-[10px] text-gray-500 font-normal">(Count)</span></th><th class="bg-red-100 px-2 py-2 text-center leading-tight whitespace-nowrap">Final Rnk<br><span class="text-[10px] text-gray-500 font-normal">(Rank 1,2..)</span></th><th class="bg-purple-100 px-2 py-2 text-center leading-tight whitespace-nowrap">Event Pts</th></tr>`;
             document.getElementById('tempoThead').innerHTML = theadHTML;
 
             let tbodyHTML = "";
@@ -381,6 +422,7 @@
         function toggleTempoLap(riderId, lapIndex, isChecked) {
             if (isChecked) { riders.forEach(r => { if (r.id !== riderId) r.tmpLaps[lapIndex] = false; }); }
             riders.find(r => r.id === riderId).tmpLaps[lapIndex] = isChecked;
+            saveToStorage(); // Auto save lap checkbox clicks!
             renderTempoRace(); 
         }
 
@@ -420,15 +462,21 @@
 
         function renderPointsRace() {
             let intermediateSprints = totalPointsSprints - 1;
+            
+            // UI CLARIFICATIONS IMPLEMENTED IN HEADERS
             let theadHTML = `<tr><th class="sticky-corner py-3">Rider</th>`;
             let sprintKeys = [];
             
             for(let i = 1; i <= intermediateSprints; i++) {
-                theadHTML += `<th class="py-3 px-2">S${i}</th>`;
+                theadHTML += `<th class="py-2 px-2 text-center leading-tight">S${i}<br><span class="text-[10px] text-gray-500 font-normal">(Pts)</span></th>`;
                 sprintKeys.push(`s${i}`);
             }
             
-            theadHTML += `<th class="bg-blue-100 text-xs px-2 py-3 leading-tight">Final<br>Sprint</th><th class="bg-green-100 text-xs px-2 py-3 leading-tight">+/-<br>Laps</th><th class="bg-red-100 text-xs px-2 py-3 leading-tight">Final<br>Rnk</th><th class="font-bold text-base px-3 py-3 bg-gray-200">Total</th></tr>`;
+            theadHTML += `<th class="bg-blue-100 text-xs px-2 py-2 leading-tight text-center">Final Sprint<br><span class="text-[10px] text-gray-500 font-normal">(Double Pts)</span></th>`;
+            theadHTML += `<th class="bg-green-100 text-xs px-2 py-2 leading-tight text-center">+/- Laps<br><span class="text-[10px] text-gray-500 font-normal">(Count)</span></th>`;
+            theadHTML += `<th class="bg-red-100 text-xs px-2 py-2 leading-tight text-center">Final Rnk<br><span class="text-[10px] text-gray-500 font-normal">(Rank 1,2..)</span></th>`;
+            theadHTML += `<th class="font-bold text-base px-3 py-2 bg-gray-200 text-center">Total</th></tr>`;
+            
             document.getElementById('pointsThead').innerHTML = theadHTML;
 
             document.getElementById('prTableBody').innerHTML = riders.map(r => `
@@ -536,8 +584,8 @@
             doc.save('UCI_Omnium_Final_Classification.pdf');
         }
 
-        // Initial Setup
-        updateSettings();
+        // Initialize App by loading saved data
+        loadFromStorage();
         renderAll();
     </script>
 </body>
