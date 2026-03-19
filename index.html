@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Pro UCI Calculator v10 (Omnium + PR)</title>
+    <title>Pro UCI Calculator v11 (Omnium + PR)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -61,7 +61,7 @@
                     <h1 class="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">🏁 UCI Track Calculator</h1>
                     <span id="saveStatus" class="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded border border-green-300 opacity-0 transition-opacity duration-300">Auto-Saved ✓</span>
                 </div>
-                <p class="text-gray-500 text-xs sm:text-sm mt-1">Dual Engine: Separate Data for Omnium & Points Race</p>
+                <p class="text-gray-500 text-xs sm:text-sm mt-1">v11: Fixed Refresh Redraw & Event Memory</p>
             </div>
             
             <div class="flex flex-col sm:flex-row w-full lg:w-auto gap-2 bg-gray-100 p-1.5 rounded-lg border border-gray-300">
@@ -219,6 +219,8 @@
         // --- DATA STATE ---
         const ABSOLUTE_MAX_LAPS = 150; 
         
+        let currentMode = 'omnium'; // Memory for active tab
+        
         // OMNIUM STATE
         let omRiders = [];
         let omCfg = { tmp: 40, prTot: 80, prSp: 10, sprints: 8 };
@@ -232,6 +234,9 @@
 
         // --- MODE SWITCHER ---
         function switchEventMode(mode) {
+            currentMode = mode;
+            saveToStorage(); // Save which view they are in
+            
             document.querySelectorAll('.mode-view').forEach(el => el.classList.remove('active'));
             document.getElementById(`app-${mode}`).classList.add('active');
             
@@ -260,15 +265,16 @@
 
         // --- LOCAL STORAGE ---
         function saveToStorage() {
-            localStorage.setItem('uciCalcData_v10', JSON.stringify({
-                omRiders, omCfg, iprRiders, iprCfg
+            localStorage.setItem('uciCalcData_v11', JSON.stringify({
+                omRiders, omCfg, iprRiders, iprCfg, currentMode
             }));
             const badge = document.getElementById('saveStatus');
             if(badge) { badge.style.opacity = '1'; setTimeout(() => { badge.style.opacity = '0'; }, 2000); }
         }
 
         function loadFromStorage() {
-            const saved = localStorage.getItem('uciCalcData_v10');
+            let loadedMode = 'omnium';
+            const saved = localStorage.getItem('uciCalcData_v11');
             if (saved) {
                 try {
                     const data = JSON.parse(saved);
@@ -276,6 +282,7 @@
                     omCfg = data.omCfg || { tmp: 40, prTot: 80, prSp: 10, sprints: 8 };
                     iprRiders = data.iprRiders || [];
                     iprCfg = data.iprCfg || { prTot: 100, prSp: 10, sprints: 10 };
+                    loadedMode = data.currentMode || 'omnium';
 
                     document.getElementById('omCfgTempo').value = omCfg.tmp;
                     document.getElementById('omCfgPRLaps').value = omCfg.prTot;
@@ -287,6 +294,7 @@
             }
             updateOmSettings(true);
             updateIprSettings(true);
+            return loadedMode; // Return the mode to activate it
         }
 
         // --- COMMON LOGIC ---
@@ -356,13 +364,20 @@
             renderOmTempo(); renderOmPointsRace();
         }
 
-        function renderAllOm() { renderRiderList('om'); renderOmEvents(1); renderOmEvents(3); renderOmTempo(); renderOmPointsRace(); renderOmFinal(); }
+        function renderAllOm() { 
+            renderRiderList('om'); 
+            renderOmEvents(1); 
+            renderOmEvents(3); 
+            renderOmTempo(); 
+            renderOmPointsRace(); 
+            renderOmFinal(); 
+        }
 
         function renderOmEvents(eId) {
             const k = eventKeys[eId];
             document.getElementById(`view-om-${eId}`).innerHTML = 
                 `<div class="overflow-x-auto border border-gray-200 rounded-lg"><table class="w-full text-sm text-left"><thead class="bg-blue-50"><tr><th class="p-2 border-b">Rider</th><th class="p-2 border-b text-center">Rank</th></tr></thead><tbody>` +
-                omRiders.map(r => `<tr><td class="p-2 border-b font-medium">${r.name}</td><td class="p-2 border-b text-center"><input type="number" min="1" class="border rounded p-1 input-sm focus:ring-2 focus:ring-blue-500" value="${r[k]}" onchange="updateData('${r.id}', '${k}', this.value, 'om'); renderOmEvents(${eId})"></td></tr>`).join('') + `</tbody></table></div>` +
+                omRiders.map(r => `<tr><td class="p-2 border-b font-medium">${r.name}</td><td class="p-2 border-b text-center"><input type="number" min="1" class="border rounded p-1 input-sm focus:ring-2 focus:ring-blue-500" value="${r[k]}" onchange="updateData('${r.id}', '${k}', this.value, 'om'); renderOmEvents(${eId}); renderOmFinal();"></td></tr>`).join('') + `</tbody></table></div>` +
                 `<div class="overflow-x-auto border border-gray-200 rounded-lg"><table class="w-full text-sm text-left"><thead class="bg-green-50"><tr><th class="p-2 border-b text-center">Rnk</th><th class="p-2 border-b">Rider</th><th class="p-2 border-b text-center">Tot Pts</th></tr></thead><tbody>` +
                 [...omRiders].map(r => ({n: r.name, p: calculateSubtotal(r, eId), t: r[k]||999})).sort((a,b)=>b.p!==a.p ? b.p-a.p : a.t-b.t).map((r,i) => `<tr class="${i===0?'bg-yellow-50':''}"><td class="p-2 border-b text-center font-bold">${i+1}</td><td class="p-2 border-b">${r.n}</td><td class="p-2 border-b text-center font-bold text-blue-700">${r.p}</td></tr>`).join('') + `</tbody></table></div>`;
         }
@@ -384,10 +399,11 @@
         }
 
         function toggleOmTmp(rId, i, chk) { if(chk) omRiders.forEach(r => {if(r.id!==rId) r.tmpLaps[i]=false;}); omRiders.find(r=>r.id===rId).tmpLaps[i]=chk; saveToStorage(); renderOmTempo(); }
+        
         function calcOmTmp(skip=false) {
             let s = [...omRiders].sort((a,b)=>b.tmpRawPts!==a.tmpRawPts ? b.tmpRawPts-a.tmpRawPts : (a.tmpFinalRank||999)-(b.tmpFinalRank||999));
             s.forEach((r,i) => { omRiders.find(x=>x.id===r.id).tmp = i+1; });
-            if(!skip) renderOmTempo();
+            if(!skip) { renderOmTempo(); renderOmFinal(); }
             document.getElementById('omTmpRes').innerHTML = `<table class="w-full text-sm"><thead class="bg-gray-100"><tr><th class="p-2 border-b">Pl.</th><th class="p-2 border-b">Rider</th><th class="p-2 border-b">OM Pts</th></tr></thead><tbody>` + s.map((r,i)=>`<tr><td class="p-2 border-b text-center">${i+1}</td><td class="p-2 border-b">${r.name}</td><td class="p-2 border-b text-center font-bold text-purple-600">+${getPts(i+1)}</td></tr>`).join('')+`</tbody></table>`;
             let st = [...omRiders].map(r=>({n:r.name,p:calculateSubtotal(r,2),t:r.tmp||999})).sort((a,b)=>b.p!==a.p ? b.p-a.p : a.t-b.t);
             document.getElementById('omTmpStd').innerHTML = `<table class="w-full text-sm"><thead class="bg-gray-100"><tr><th class="p-2 border-b">Rnk</th><th class="p-2 border-b">Rider</th><th class="p-2 border-b">Overall</th></tr></thead><tbody>` + st.map((r,i)=>`<tr><td class="p-2 border-b text-center">${i+1}</td><td class="p-2 border-b">${r.n}</td><td class="p-2 border-b text-center font-bold">${r.p}</td></tr>`).join('')+`</tbody></table>`;
@@ -416,7 +432,7 @@
         }
 
         function renderOmFinal() {
-            document.getElementById('omFinalBody').innerHTML = getOmFinal().map((r,i) => `<tr class="${i===0?'bg-yellow-50':(i===1?'bg-gray-100':(i===2?'bg-orange-50':''))} border-b"><td class="py-2 px-2 text-center font-bold sticky left-0 z-10 bg-inherit">${i+1}</td><td class="py-2 px-4 font-bold sticky left-[45px] z-10 bg-inherit shadow-md">${r.name}</td><td class="text-center">${r.scr||'-'}</td><td class="text-center">${r.tmp||'-'}</td><td class="text-center">${r.eli||'-'}</td><td class="text-center font-bold bg-gray-100">${r.sub}</td><td class="text-center">${r.sp}</td><td class="text-center">${r.lp}</td><td class="text-center text-red-600">${r.finalRank||'-'}</td><td class="text-center font-black text-xl text-blue-900 bg-blue-50/50">${r.tot}</td></tr>`).join('');
+            document.getElementById('omFinalBody').innerHTML = getOmFinal().map((r,i) => `<tr class="${i===0?'bg-yellow-50':(i===1?'bg-gray-100':(i===2?'bg-orange-50':''))} border-b"><td class="py-2 px-2 text-center font-bold sticky left-0 z-10 bg-inherit">${i+1}</td><td class="py-2 px-4 font-bold sticky left-[45px] z-10 bg-inherit shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${r.name}</td><td class="text-center">${r.scr||'-'}</td><td class="text-center">${r.tmp||'-'}</td><td class="text-center">${r.eli||'-'}</td><td class="text-center font-bold bg-gray-100">${r.sub}</td><td class="text-center">${r.sp}</td><td class="text-center">${r.lp}</td><td class="text-center text-red-600">${r.finalRank||'-'}</td><td class="text-center font-black text-xl text-blue-900 bg-blue-50/50">${r.tot}</td></tr>`).join('');
         }
 
         // --- INDEPENDENT POINTS RACE LOGIC ---
@@ -429,7 +445,11 @@
             renderIprPointsRace();
         }
 
-        function renderAllIpr() { renderRiderList('ipr'); renderIprPointsRace(); renderIprFinal(); }
+        function renderAllIpr() { 
+            renderRiderList('ipr'); 
+            renderIprPointsRace(); 
+            renderIprFinal(); 
+        }
 
         function calcIprTot(r) { let s=0; for(let i=1; i<iprCfg.sprints; i++) s+=(r['s'+i]||0); return s+(r.sf||0)+((r.laps||0)*20); }
         function renderIprPointsRace() {
@@ -453,7 +473,7 @@
         }
 
         function renderIprFinal() {
-            document.getElementById('iprFinalBody').innerHTML = getIprFinal().map((r,i) => `<tr class="${i===0?'bg-red-50':(i===1?'bg-gray-100':(i===2?'bg-orange-50':''))} border-b"><td class="py-2 px-2 text-center font-bold sticky left-0 z-10 bg-inherit">${i+1}</td><td class="py-2 px-4 font-bold sticky left-[45px] z-10 bg-inherit shadow-md">${r.name}</td><td class="text-center">${r.sp}</td><td class="text-center">${r.lp}</td><td class="text-center text-red-600">${r.finalRank||'-'}</td><td class="text-center font-black text-xl text-red-900 bg-red-50/50">${r.tot}</td></tr>`).join('');
+            document.getElementById('iprFinalBody').innerHTML = getIprFinal().map((r,i) => `<tr class="${i===0?'bg-red-50':(i===1?'bg-gray-100':(i===2?'bg-orange-50':''))} border-b"><td class="py-2 px-2 text-center font-bold sticky left-0 z-10 bg-inherit">${i+1}</td><td class="py-2 px-4 font-bold sticky left-[45px] z-10 bg-inherit shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${r.name}</td><td class="text-center">${r.sp}</td><td class="text-center">${r.lp}</td><td class="text-center text-red-600">${r.finalRank||'-'}</td><td class="text-center font-black text-xl text-red-900 bg-red-50/50">${r.tot}</td></tr>`).join('');
         }
 
         // --- PDF EXPORT LOGIC ---
@@ -498,8 +518,9 @@
             doc.save(mode==='om' ? 'UCI_Omnium_Final.pdf' : 'UCI_Points_Race_Final.pdf');
         }
 
-        // Init
-        loadFromStorage();
+        // Initialize App
+        let initialMode = loadFromStorage();
+        switchEventMode(initialMode); // Instantly forces all tables to redraw
     </script>
 </body>
 </html>
