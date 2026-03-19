@@ -514,7 +514,7 @@
         function renderIprPointsRace() {
             let th = `<tr><th class="sticky-corner py-2">Rider</th>`;
             for(let i=1; i<iprCfg.sprints; i++) th += `<th class="text-xs px-1">S${i}<br>(Pts)</th>`;
-            th += `<th class="bg-red-100 text-xs px-1">Fin Sp<br>(x2)</th><th class="bg-green-100 text-xs px-1">+/- Lap</th><th class="bg-orange-100 text-xs px-1">Fin Rnk</th><th class="bg-gray-200">Tot</th></tr>`;
+            th += `<th class="bg-red-100 text-xs px-1">Fin Sp<br></th><th class="bg-green-100 text-xs px-1">+/- Lap</th><th class="bg-orange-100 text-xs px-1">Fin Rnk</th><th class="bg-gray-200">Tot</th></tr>`;
             document.getElementById('iprPtsHead').innerHTML = th;
             document.getElementById('iprPtsBody').innerHTML = iprRiders.map(r => `<tr><td class="sticky-col">${r.name}</td>` + 
                 Array.from({length:iprCfg.sprints-1}, (_,i) => i+1).map(i => `<td><input type="number" min="0" class="border border-red-200 rounded p-1 input-sm mx-auto block focus:ring-red-500" value="${r['s'+i]!==undefined?r['s'+i]:''}" onchange="updateData('${r.id}','s${i}',this.value,'ipr'); document.getElementById('ipr-ptot-${r.id}').innerText=calcIprTot(iprRiders.find(x=>x.id==='${r.id}')); renderIprFinal();"></td>`).join('') +
